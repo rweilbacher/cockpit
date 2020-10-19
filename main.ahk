@@ -23,34 +23,27 @@ FormatTime, CurrentDateTime,, yyyy-MM-dd
 SendInput %CurrentDateTime%
 return
 
-SendEvernoteHeader(headerLevel)
+ChangeFormattingToEvernoteHeader(headerLevel)
 {
 ClipBackup := Clipboard
+SendInput ^c
+Sleep 50
 RunWait %pythonPath% "%cockpitPath%\evernote_helper.pyw" %headerLevel%
 SendInput ^v
-Sleep 100
-Clipboard := ClipBackup
-}
-
-ChangeFormattingToHeader(headerLevel)
-{
-ClipBackup := Clipboard
-RunWait %pythonPath% "%cockpitPath%\evernote_helper.pyw" %headerLevel%
-SendInput ^v
-Sleep 100
+Sleep 50
 Clipboard := ClipBackup
 }
 
 ^1::
-SendEvernoteHeader("h1")
+ChangeFormattingToEvernoteHeader("h1")
 return
 
 ^2::
-SendEvernoteHeader("h2")
+ChangeFormattingToEvernoteHeader("h2")
 return
 
 ^3::
-SendEvernoteHeader("h3")
+ChangeFormattingToEvernoteHeader("h3")
 return
 
 ::opsy::opportunistically 
