@@ -45,6 +45,10 @@ Sleep 50
 Clipboard := ClipBackup
 }
 
+^0::
+ChangeFormattingToEvernoteHeader("h0")
+return
+
 ^1::
 ChangeFormattingToEvernoteHeader("h1")
 return

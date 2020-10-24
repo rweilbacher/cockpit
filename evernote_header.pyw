@@ -6,6 +6,14 @@ import HtmlClipboard
 import sys
 import win32clipboard
 
+headerZero = """
+<html>
+<body>
+<!--StartFragment--><div data-pm-slice="1 1 []" data-en-clipboard="true"><span style="font-size: 16px;">{}</span></div><!--EndFragment-->
+</body>
+</html>
+"""
+
 headerOne = """
 <html>
 <body>
@@ -32,7 +40,9 @@ headerDepth = sys.argv[1]
 win32clipboard.OpenClipboard()
 text = win32clipboard.GetClipboardData()
 win32clipboard.CloseClipboard()
-if headerDepth == "h1":
+if headerDepth == "h0":
+    HtmlClipboard.PutHtml(headerZero.format(text))
+elif headerDepth == "h1":
     HtmlClipboard.PutHtml(headerOne.format(text))
 elif headerDepth == "h2":
     HtmlClipboard.PutHtml(headerTwo.format(text))
