@@ -144,6 +144,8 @@ class HtmlClipboard:
                 src = win32clipboard.GetClipboardData(self.GetCfHtml())
                 src = src.decode("UTF-8")
                 # print(src)
+                # @rweilbacher: I added this because the decoding didn't work and I just needed the HTML src
+                self.fragment = src
                 self.DecodeClipboardSource(src)
 
                 cbOpened = True
@@ -153,14 +155,14 @@ class HtmlClipboard:
                 # If access is denied, that means that the clipboard is in use.
                 # Keep trying until it's available.
                 if err.winerror == 5:  # Access Denied
-                    pass
+                    print("winerror 5 -access denied")
                     # wait on clipboard because something else has it. we're waiting a
                     # random amount of time before we try again so we don't collide again
                     time.sleep(random.random() / 50)
                 elif err.winerror == 1418:  # doesn't have board open
-                    pass
+                    print("winerror 1418 - doesn't have board open")
                 elif err.winerror == 0:  # open failure
-                    pass
+                    print("winerror 0 - open failure")
                 else:
                     print('ERROR in Clipboard section of readcomments: %s' % err)
 

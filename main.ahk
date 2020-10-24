@@ -28,7 +28,18 @@ ChangeFormattingToEvernoteHeader(headerLevel)
 ClipBackup := Clipboard
 SendInput ^c
 Sleep 50
-RunWait %pythonPath% "%cockpitPath%\evernote_helper.pyw" %headerLevel%
+RunWait %pythonPath% "%cockpitPath%\evernote_header.pyw" %headerLevel%
+SendInput ^v
+Sleep 50
+Clipboard := ClipBackup
+}
+
+ToggleEverNoteTextColor()
+{
+ClipBackup := Clipboard
+SendInput ^c
+Sleep 50
+RunWait %pythonPath% "%cockpitPath%\evernote_textcolor.py"
 SendInput ^v
 Sleep 50
 Clipboard := ClipBackup
@@ -44,6 +55,10 @@ return
 
 ^3::
 ChangeFormattingToEvernoteHeader("h3")
+return
+
+^g::
+ToggleEverNoteTextColor()
 return
 
 ::opsy::opportunistically 
