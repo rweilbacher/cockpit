@@ -1,4 +1,5 @@
 """
+https://gist.github.com/Erreinion/6691093/b2e91a7abf92ac08dce6da9060c99c627c993472
 Created on Sep 24, 2013
 
 @author: jordans
