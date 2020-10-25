@@ -25,12 +25,14 @@ return
 
 ChangeFormattingToEvernoteHeader(headerLevel)
 {
+SendInput ^+{Left}
+Sleep 30
 ClipBackup := Clipboard
 SendInput ^c
-Sleep 50
+Sleep 30
 RunWait %pythonPath% "%cockpitPath%\evernote_header.pyw" %headerLevel%
 SendInput ^v
-Sleep 50
+Sleep 30
 Clipboard := ClipBackup
 }
 
