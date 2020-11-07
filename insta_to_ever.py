@@ -20,10 +20,8 @@ oauth_token = credentials.get(b'oauth_token')[0].decode("utf-8")
 oauth_secret = credentials.get(b'oauth_token_secret')[0].decode("utf-8")
 
 oauth = OAuth1(instapaper.clientId, instapaper.clientSecret+"&"+oauth_secret, oauth_token)
-list_url = 'https://www.instapaper.com/api/1/bookmarks/list'
-params = {
-    "username": instapaper.username,
-    "password": instapaper.password
-}
-r = requests.post(list_url, auth=oauth, data=params)
+verify_url = baseUrl + "/api/1/account/verify_credentials"
+r = requests.post(verify_url, auth=oauth)
+# list_url = 'https://www.instapaper.com/api/1/bookmarks/list'
+# r = requests.post(list_url, auth=oauth)
 print(r)

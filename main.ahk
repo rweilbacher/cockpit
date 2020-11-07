@@ -67,7 +67,34 @@ return
 ToggleEverNoteTextColor()
 return
 
+`::
+Send, {Backspace}
+return
+
+!s::
+Click WheelDown
+return		
+
+!w::
+Click WheelUp
+return	
+
+!q::
+Send, {Enter}
+return
+														
+
 ::opsy::opportunistically 
 ::nsy::necessarily 
 ::prio::priority 
 ::aes::aesthetic
+::delib::deliberately
+::consc::consciousness
+::conscy::consciously
+::dont::don't
+::cant::can't
+::wont::won't
+::didnt::didn't
+::imt::important
+::assu::assumption
+::urose::purpose
