@@ -11,7 +11,6 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; * = Wildcard
 ; ::hw::Hello World = Text expansion
 
-global cockpitPath = "C:\Users\Roland\Google Drive\Projects\cockpit"
 global pythonPath = "C:\Users\Roland\AppData\Local\Programs\Python\Python37\pythonw.exe"
 
 +F5::Edit ; Shift-F5 launches the current AutoHotkey script in preferred editor, else Notepad 
@@ -25,12 +24,13 @@ return
 
 ChangeFormattingToEvernoteHeader(headerLevel)
 {
-SendInput ^+{Left}
+;TODO select the entire line with SendPlay and Home
+Send, ^+{Left}
 Sleep 30
 ClipBackup := Clipboard
 SendInput ^c
 Sleep 30
-RunWait %pythonPath% "%cockpitPath%\evernote_header.pyw" %headerLevel%
+RunWait %pythonPath% ".\evernote_header.pyw" %headerLevel%
 SendInput ^v
 Sleep 30
 Clipboard := ClipBackup
@@ -41,7 +41,7 @@ ToggleEverNoteTextColor()
 ClipBackup := Clipboard
 SendInput ^c
 Sleep 50
-RunWait %pythonPath% "%cockpitPath%\evernote_textcolor.py"
+RunWait %pythonPath% ".\evernote_textcolor.py"
 SendInput ^v
 Sleep 50
 Clipboard := ClipBackup
@@ -81,6 +81,10 @@ return
 
 !q::
 Send, {Enter}
+return
+
+!F2::
+RunWait %pythonPath% ".\templates.py"
 return
 														
 
