@@ -59,7 +59,7 @@ week_template = """- {{{{[[query]]: {{and: [[summary-{0}]]}}}}}}
 weekdays = {0: "Mon", 1: "Tue", 2: "Wed", 3: "Thu", 4: "Fri", 5: "Sat", 6: "Sun"}
 
 def copy_daily():
-    today = datetime.date.today()
+    today = datetime.date.today() + datetime.timedelta(days=int(day_offset_input.value))
     week = "week" + str(today.isocalendar()[1])
     day = today.strftime("%Y-%m-%d") + " " + weekdays[today.weekday()]
     filled_template = daily_template.format(week, day)
@@ -67,13 +67,15 @@ def copy_daily():
     sys.exit()
 
 def copy_weekly():
-    today = datetime.date.today()
+    today = datetime.date.today() + datetime.timedelta(days=int(day_offset_input.value))
     week = "week" + str(today.isocalendar()[1])
     filled_template = week_template.format(week)
     pyperclip.copy(filled_template)
     sys.exit()
 
 app = guizero.App(title="Templates", width=200, height=200, layout="grid")
-daily_button = guizero.PushButton(app, copy_daily, text="Daily review", grid=[0, 0])
-weekly_button = guizero.PushButton(app, copy_weekly, text="Weekly review", grid=[1, 0])
+day_offset_label = guizero.Text(app, text="Day offset", grid=[0, 0])
+day_offset_input = guizero.TextBox(app, text="0", grid=[1, 0])
+daily_button = guizero.PushButton(app, copy_daily, text="Daily review", grid=[0, 1])
+weekly_button = guizero.PushButton(app, copy_weekly, text="Weekly review", grid=[1, 1])
 app.display()
