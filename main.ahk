@@ -22,7 +22,7 @@ FormatTime, CurrentDateTime,, yyyy-MM-dd
 SendInput %CurrentDateTime%
 return
 
-ChangeFormattingToEvernoteHeader(headerLevel)
+changeFormattingToEvernoteHeader(headerLevel)
 {
 ;TODO select the entire line with SendPlay and Home
 Send, ^+{Left}
@@ -36,7 +36,7 @@ Sleep 30
 Clipboard := ClipBackup
 }
 
-ToggleEverNoteTextColor()
+toggleEverNoteTextColor()
 {
 ClipBackup := Clipboard
 SendInput ^c
@@ -47,28 +47,48 @@ Sleep 50
 Clipboard := ClipBackup
 }
 
+isLangEn()
+{
+DE = 0x4070407
+EN = 0x4090409
+SetFormat, Integer, H
+  WinGet, WinID,, A
+  ThreadID:=DllCall("GetWindowThreadProcessId", "UInt", WinID, "UInt", 0)
+  InputLocaleID:=DllCall("GetKeyboardLayout", "UInt", ThreadID, "UInt")
+  if (EN = InputLocaleID) {
+    return true
+  } else {
+    return false
+  }
+}
+
 ^0::
-ChangeFormattingToEvernoteHeader("h0")
+changeFormattingToEvernoteHeader("h0")
 return
 
 ^1::
-ChangeFormattingToEvernoteHeader("h1")
+changeFormattingToEvernoteHeader("h1")
 return
 
 ^2::
-ChangeFormattingToEvernoteHeader("h2")
+changeFormattingToEvernoteHeader("h2")
 return
 
 ^3::
-ChangeFormattingToEvernoteHeader("h3")
+changeFormattingToEvernoteHeader("h3")
 return
 
 ^g::
-ToggleEverNoteTextColor()
+toggleEverNoteTextColor()
 return
 
-`::
-Send, {Backspace}
+$`::
+if (isLangEn() = true) {
+    Send, {Backspace}
+}
+else {
+    Send, ö
+}
 return
 
 !s::
