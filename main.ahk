@@ -11,6 +11,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; * = Wildcard
 ; ::hw::Hello World = Text expansion
 
+global enableEvernote = true
 global pythonPath = "C:\Users\Roland\AppData\Local\Programs\Python\Python37\pythonw.exe"
 
 +F5::Edit ; Shift-F5 launches the current AutoHotkey script in preferred editor, else Notepad 
@@ -24,6 +25,9 @@ return
 
 changeFormattingToEvernoteHeader(headerLevel)
 {
+if (enableEvernote = false) {
+    return false
+}
 ;TODO select the entire line with SendPlay and Home
 Send, ^+{Left}
 Sleep 30
@@ -34,10 +38,14 @@ RunWait %pythonPath% ".\evernote_header.pyw" %headerLevel%
 SendInput ^v
 Sleep 30
 Clipboard := ClipBackup
+return true
 }
 
 toggleEverNoteTextColor()
 {
+if (enableEvernote = false) {
+    return false
+}
 ClipBackup := Clipboard
 SendInput ^c
 Sleep 50
@@ -45,6 +53,7 @@ RunWait %pythonPath% ".\evernote_textcolor.py"
 SendInput ^v
 Sleep 50
 Clipboard := ClipBackup
+return true
 }
 
 isLangEn()
@@ -62,24 +71,48 @@ SetFormat, Integer, H
   }
 }
 
-^0::
-changeFormattingToEvernoteHeader("h0")
+!F12::
+if (enableEvernote = true) {
+    global enableEvernote = false
+}
+else {
+    global enableEvernote = true
+}
 return
 
-^1::
-changeFormattingToEvernoteHeader("h1")
+$^0::
+success := changeFormattingToEvernoteHeader("h0")
+if (success = false) {
+    Send, ^0
+}
 return
 
-^2::
-changeFormattingToEvernoteHeader("h2")
+$^1::
+success := changeFormattingToEvernoteHeader("h1")
+if (success = false) {
+    Send, ^1
+}
 return
 
-^3::
-changeFormattingToEvernoteHeader("h3")
+$^2::
+success := changeFormattingToEvernoteHeader("h2")
+if (success = false) {
+    Send, ^2
+}
 return
 
-^g::
-toggleEverNoteTextColor()
+$^3::
+success := changeFormattingToEvernoteHeader("h3")
+if (success = false) {
+    Send, ^3
+}
+return
+
+$^g::
+success := toggleEverNoteTextColor()
+if (success = false) {
+    Send, ^g
+}
 return
 
 $`::
