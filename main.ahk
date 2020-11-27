@@ -24,7 +24,22 @@ global EN_KEY_LAYOUT = 0x4090409
 +F5::Edit ; Shift-F5 launches the current AutoHotkey script in preferred editor, else Notepad
 ^F5::Reload ; Ctrl-F5 reloads the current AutoHotKey script after any edits.
 
+; --- General hotkeys ---
+
+; Send the current date in ISO format
+!2::
+FormatTime, CurrentDateTime,, yyyy-MM-dd
+SendInput %CurrentDateTime%
+return
+
+
+; Start the templates python script, which is a small GUI for selecting templates to load into the Clipboard
+!F2::
+RunWait %pythonPath% ".\templates.py"
+return
+
 ; --- Evernote Utils ---
+
 changeFormattingToEvernoteHeader(headerLevel)
 {
 ;TODO select the entire line with SendPlay and Home
@@ -99,13 +114,7 @@ if (enableEvernote = false) {
 toggleEverNoteTextColor()
 return
 
-; --- General hotkeys ---
-
-; Send the current date in ISO format
-!2::
-FormatTime, CurrentDateTime,, yyyy-MM-dd
-SendInput %CurrentDateTime%
-return
+; --- Reduce strain on right hand ---
 
 ; Find out the ID of the current keyboard layout
 ; I often switch between German and English
@@ -143,11 +152,6 @@ if (inputLocaleId = EN_KEY_LAYOUT) {
 else if (inputLocaleId = DE_KEY_LAYOUT) {
     Send, ö
 }
-return
-
-; Start the templates python script, which is a small GUI for selecting templates to load into the Clipboard
-!F2::
-RunWait %pythonPath% ".\templates.py"
 return
 														
 ; Word expansions to improve typing speed and ease
