@@ -10,24 +10,23 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; <> = Left or right version
 ; * = Wildcard
 ; ::hw::Hello World = Text expansion
+; $ prefix disables activation of the hotkey by its own Send commands
 
+; global variable to enable and disable custom Evernote hotkeys, since they might clash with other applications
 global enableEvernote = true
+; TODO Replace with a more flexible approach to start python
 global pythonPath = "C:\Users\Roland\AppData\Local\Programs\Python\Python37\pythonw.exe"
 
-+F5::Edit ; Shift-F5 launches the current AutoHotkey script in preferred editor, else Notepad 
+global DE_KEY_LAYOUT = 0x4070407
+global EN_KEY_LAYOUT = 0x4090409
 
+; Hotkeys that make small changes and reloads much faster
++F5::Edit ; Shift-F5 launches the current AutoHotkey script in preferred editor, else Notepad
 ^F5::Reload ; Ctrl-F5 reloads the current AutoHotKey script after any edits.
 
-!2::
-FormatTime, CurrentDateTime,, yyyy-MM-dd
-SendInput %CurrentDateTime%
-return
-
+; --- Evernote Utils ---
 changeFormattingToEvernoteHeader(headerLevel)
 {
-if (enableEvernote = false) {
-    return false
-}
 ;TODO select the entire line with SendPlay and Home
 Send, ^+{Left}
 Sleep 30
@@ -38,14 +37,10 @@ RunWait %pythonPath% ".\evernote_header.pyw" %headerLevel%
 SendInput ^v
 Sleep 30
 Clipboard := ClipBackup
-return true
 }
 
 toggleEverNoteTextColor()
 {
-if (enableEvernote = false) {
-    return false
-}
 ClipBackup := Clipboard
 SendInput ^c
 Sleep 50
@@ -53,22 +48,6 @@ RunWait %pythonPath% ".\evernote_textcolor.py"
 SendInput ^v
 Sleep 50
 Clipboard := ClipBackup
-return true
-}
-
-isLangEn()
-{
-DE = 0x4070407
-EN = 0x4090409
-SetFormat, Integer, H
-  WinGet, WinID,, A
-  ThreadID:=DllCall("GetWindowThreadProcessId", "UInt", WinID, "UInt", 0)
-  InputLocaleID:=DllCall("GetKeyboardLayout", "UInt", ThreadID, "UInt")
-  if (EN = InputLocaleID) {
-    return true
-  } else {
-    return false
-  }
 }
 
 !F12::
@@ -81,66 +60,97 @@ else {
 return
 
 $^0::
-success := changeFormattingToEvernoteHeader("h0")
-if (success = false) {
+if (enableEvernote = false) {
     Send, ^0
+    return
 }
+changeFormattingToEvernoteHeader("h0")
 return
 
 $^1::
-success := changeFormattingToEvernoteHeader("h1")
-if (success = false) {
+if (enableEvernote = false) {
     Send, ^1
+    return
 }
+changeFormattingToEvernoteHeader("h1")
 return
 
 $^2::
-success := changeFormattingToEvernoteHeader("h2")
-if (success = false) {
+if (enableEvernote = false) {
     Send, ^2
+    return
 }
+changeFormattingToEvernoteHeader("h2")
 return
 
 $^3::
-success := changeFormattingToEvernoteHeader("h3")
-if (success = false) {
+if (enableEvernote = false) {
     Send, ^3
+    return
 }
+changeFormattingToEvernoteHeader("h3")
 return
 
 $^g::
-success := toggleEverNoteTextColor()
-if (success = false) {
+if (enableEvernote = false) {
     Send, ^g
+    return
 }
+toggleEverNoteTextColor()
 return
 
-$`::
-if (isLangEn() = true) {
-    Send, {Backspace}
-}
-else {
-    Send, ö
-}
+; --- General hotkeys ---
+
+; Send the current date in ISO format
+!2::
+FormatTime, CurrentDateTime,, yyyy-MM-dd
+SendInput %CurrentDateTime%
 return
 
+; Find out the ID of the current keyboard layout
+; I often switch between German and English
+getInputLocaleId()
+{
+SetFormat, Integer, H
+  WinGet, WinID,, A
+  ThreadID:=DllCall("GetWindowThreadProcessId", "UInt", WinID, "UInt", 0)
+  InputLocaleID:=DllCall("GetKeyboardLayout", "UInt", ThreadID, "UInt")
+  return InputLocaleID
+}
+
+; Alternative Mouse scroll to reduce strain on right hand
 !s::
 Click WheelDown
 return		
 
+; Alternative Mouse scroll to reduce strain on right hand
 !w::
 Click WheelUp
 return	
 
+; Alternative Enter to reduce strain on right hand
 !q::
 Send, {Enter}
 return
 
+; Alternative Backspace to reduce strain on right hand
+; ö and ` have the same keycode and I regularly switch layouts, so hotkey depends on keyboard layout
+$`::
+inputLocaleId := getInputLocaleId()
+if (inputLocaleId = EN_KEY_LAYOUT) {
+    Send, {Backspace}
+}
+else if (inputLocaleId = DE_KEY_LAYOUT) {
+    Send, ö
+}
+return
+
+; Start the templates python script, which is a small GUI for selecting templates to load into the Clipboard
 !F2::
 RunWait %pythonPath% ".\templates.py"
 return
 														
-
+; Word expansions to improve typing speed and ease
 ::opsy::opportunistically 
 ::nsy::necessarily 
 ::prio::priority 
