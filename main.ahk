@@ -154,7 +154,8 @@ else if (inputLocaleId = DE_KEY_LAYOUT) {
 }
 return
 														
-; Word expansions to improve typing speed and ease
+; --- Word expansions ---
+
 ::opsy::opportunistically 
 ::nsy::necessarily 
 ::prio::priority 

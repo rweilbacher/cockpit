@@ -1,6 +1,6 @@
 # This script takes the current text from the clipboard
-# puts some HTML with style information around and puts it into the HTML clipboard.
-# Which HTML gets put around the text depends on a command line argument
+# puts some HTML with style information around it and then puts it back into the HTML clipboard.
+# Which style information gets put around the text depends on a command line argument
 
 import HtmlClipboard
 import sys

@@ -1,3 +1,5 @@
+# Toggles the text color of the clipboard between red and black
+
 import HtmlClipboard
 import win32clipboard
 
