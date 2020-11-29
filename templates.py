@@ -21,8 +21,6 @@ import sys
 # I assume this template could easily be adapted to similar platforms like https://www.remnote.io/
 daily_template = """- #{0} #[[{1}]] Summary 
     - #[[summary-{0}]] #[[{1}]]
-- #{0} #[[{1}]] Day rating 
-    - #[[rating-{0}]] #[[{1}]]
 - #{0} #[[{1}]] Important events 
     - #[[events-{0}]] #[[{1}]]
 - #{0} #[[{1}]] Improvable 
@@ -53,8 +51,6 @@ daily_template = """- #{0} #[[{1}]] Summary
 # All notes must be connected to a bullet with a link like: summary-week47-review
 week_template = """- {{{{[[query]]: {{and: [[summary-{0}]]}}}}}}
     - #[[summary-{0}-review]]
-- {{{{[[query]]: {{and: [[rating-{0}]]}}}}}}
-    - #[[rating-{0}-review]]
 - {{{{[[query]]: {{and: [[events-{0}]]}}}}}}
     - #[[events-{0}-review]]
 - {{{{[[query]]: {{and: [[better-{0}]]}}}}}}

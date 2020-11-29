@@ -166,6 +166,9 @@ return
 ::dont::don't
 ::cant::can't
 ::wont::won't
+::havent::haven't
+::couldnt::couldn't
+::wouldnt::wouldn't
 ::didnt::didn't
 ::imt::important
 ::assu::assumption
