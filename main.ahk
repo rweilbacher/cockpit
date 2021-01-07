@@ -13,7 +13,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; $ prefix disables activation of the hotkey by its own Send commands
 
 ; global variable to enable and disable custom Evernote hotkeys, since they might clash with other applications
-global enableEvernote = true
+global enableEvernote = false
 ; TODO Replace with a more flexible approach to start python
 global pythonPath = "C:\Users\Roland\AppData\Local\Programs\Python\Python37\pythonw.exe"
 
@@ -68,9 +68,11 @@ Clipboard := ClipBackup
 !F12::
 if (enableEvernote = true) {
     global enableEvernote = false
+	MsgBox, Disabled Evernote hotkeys
 }
 else {
     global enableEvernote = true
+	MsgBox, Enabled Evernote hotkeys
 }
 return
 
