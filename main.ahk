@@ -164,11 +164,13 @@ return
 ::consc::consciousness
 ::conscy::consciously
 ::dont::don't
+::doesnt::doesn't
 ::cant::can't
 ::wont::won't
 ::havent::haven't
 ::couldnt::couldn't
 ::wouldnt::wouldn't
+::wasnt::wasn't
 ::didnt::didn't
 ::imt::important
 ::assu::assumption
