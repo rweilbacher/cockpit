@@ -38,6 +38,10 @@ return
 RunWait %pythonPath% ".\templates.py"
 return
 
+!a::
+
+return
+
 ; --- Evernote Utils ---
 
 changeFormattingToEvernoteHeader(headerLevel)
