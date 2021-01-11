@@ -1,32 +1,35 @@
-from system_hotkey import SystemHotkey
-import pyperclip
-from pynput.keyboard import Key, Controller
-import time
+import subprocess
 
-keyboard = Controller()
+INPUT_FILE = "input.txt"
+# This name cannot contain any spaces or shell metacharacters like : or \
+OUTPUT_FILE = "multi_paster.ahk"
+AHK_PATH = "C:\Program Files\AutoHotkey\AutoHotkey.exe"
 
-def consumeHotkey(event, hotkey, args):
-    time.sleep(0.1)
-    string = args[0][0]
-    print(string)
-    keyboard.release(Key.alt)
-    keyboard.type(string)
+ahkHeader = """#SingleInstance Force
+#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+; #Warn  ; Enable warnings to assist with detecting common errors.
+SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
+SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
+"""
+
+ahkTemplate = """
+!{0}::
+Send, {1}
+return
+"""
 
 
-hk = SystemHotkey(consumer=consumeHotkey)
-
-length = 0
-with open('input.txt', 'r') as file:
-    data = file.read().split("\n")
+with open(INPUT_FILE, 'r') as inputFile, open(OUTPUT_FILE, 'w') as outputFile:
+    data = inputFile.read().split("\n")
+    outputFile.write(ahkHeader)
     for idx in range(0, len(data)):
-        hk.register(('alt', str(idx+1)), data[idx])
         print("Alt + " + str(idx + 1) + ": " + data[idx])
-    length = len(data)
+        hotkey = ahkTemplate.format(str(idx + 1), data[idx])
+        outputFile.write(hotkey)
+
+# subprocess.run([AHK_PATH, OUTPUT_FILE], check=True)
+process = subprocess.Popen([AHK_PATH, OUTPUT_FILE])
 
 print("\nHit Enter to exit")
 input()
-
-for idx in range(0, length):
-    hk.unregister(('alt' + str(idx+1)))
-
-# https://pynput.readthedocs.io/en/latest/keyboard.html
+process.terminate()

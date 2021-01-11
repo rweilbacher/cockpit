@@ -38,6 +38,12 @@ return
 RunWait %pythonPath% ".\templates.py"
 return
 
+!F3::
+Hotkey, !2, Off
+RunWait %pythonPath% ".\multi_paster.py"
+Hotkey, !2, On
+return
+
 ; --- Evernote Utils ---
 
 changeFormattingToEvernoteHeader(headerLevel)
