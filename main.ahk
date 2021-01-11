@@ -14,9 +14,28 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 ; global variable to enable and disable custom Evernote hotkeys, since they might clash with other applications
 global enableEvernote = false
-; TODO Replace with a more flexible approach to start python
-global pythonPath = "C:\Users\Roland\AppData\Local\Programs\Python\Python37\pythonw.exe"
 
+; Find python3 based on PATH variable
+EnvGet, envPath, PATH
+splitPath := StrSplit(envPath, ";")
+global pythonPath = ""
+Loop % splitPath.MaxIndex() 
+{
+	currPath := splitPath[A_Index]
+	found := RegExMatch(currPath, "[p|P]ython3.$")
+	if (found != 0) {
+		global pythonPath = currPath . "\python.exe"
+	}
+}
+
+; TODO make this work with python scripts that take command line arguments
+runPythonScript(path) {
+	if (pythonPath = "") {
+		MsgBox Can't execute python script because python3 was not found in PATH variable
+	}
+	RunWait %pythonPath% %path%
+}
+		
 global DE_KEY_LAYOUT = 0x4070407
 global EN_KEY_LAYOUT = 0x4090409
 
@@ -32,15 +51,14 @@ FormatTime, CurrentDateTime,, yyyy-MM-dd
 SendInput %CurrentDateTime%
 return
 
-
 ; Start the templates python script, which is a small GUI for selecting templates to load into the Clipboard
 !F2::
-RunWait %pythonPath% ".\templates.py"
+runPythonScript(".\templates.py")
 return
 
 !F3::
 Hotkey, !2, Off
-RunWait %pythonPath% ".\multi_paster.py"
+runPythonScript(".\multi_paster.py")
 Hotkey, !2, On
 return
 
