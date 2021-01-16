@@ -27,16 +27,6 @@ Loop % splitPath.MaxIndex()
 		global pythonPath = currPath . "\python.exe"
 	}
 }
-
-; TODO make this work with python scripts that take command line arguments
-runPythonScript(path) {
-	if (pythonPath = "") {
-		MsgBox Can't execute python script because python3 was not found in PATH variable
-	}
-	else {
-		RunWait %pythonPath% %path%
-	}
-}
 		
 global DE_KEY_LAYOUT = 0x4070407
 global EN_KEY_LAYOUT = 0x4090409
@@ -44,6 +34,27 @@ global EN_KEY_LAYOUT = 0x4090409
 ; Hotkeys that make small changes and reloads much faster
 +F5::Edit ; Shift-F5 launches the current AutoHotkey script in preferred editor, else Notepad
 ^F5::Reload ; Ctrl-F5 reloads the current AutoHotKey script after any edits.
+
+; --- Helper functions ---
+
+join(sep, params*) {
+    for index,param in params
+        str .= param . sep
+    return SubStr(str, 1, -StrLen(sep))
+}
+
+runPythonScript(path, args*) {
+	if (pythonPath = "") {
+		MsgBox Can't execute python script because python3 was not found in PATH variable
+	}
+	else {
+		argsString := join(" ", args*)
+		RunWait %pythonPath% %path% %argsString%,, UseErrorLevel
+		if (ErrorLevel != 0) {
+		    MsgBox, python script %path% encountered an error!
+		}
+	}
+}
 
 ; --- General hotkeys ---
 
@@ -68,13 +79,12 @@ return
 
 changeFormattingToEvernoteHeader(headerLevel)
 {
-;TODO select the entire line with SendPlay and Home
 Send, {SHIFT}+{Home}
 Sleep 30
 ClipBackup := Clipboard
 SendInput ^c
 Sleep 30
-RunWait %pythonPath% ".\evernote_header.pyw" %headerLevel%
+runPythonScript(".\evernote_header.pyw", headerLevel)
 SendInput ^v
 Sleep 30
 Clipboard := ClipBackup
@@ -85,7 +95,7 @@ toggleEverNoteTextColor()
 ClipBackup := Clipboard
 SendInput ^c
 Sleep 50
-RunWait %pythonPath% ".\evernote_textcolor.py"
+runPythonScript(".\evernote_textcolor.py")
 SendInput ^v
 Sleep 50
 Clipboard := ClipBackup

@@ -58,21 +58,21 @@ text = win32clipboard.GetClipboardData()
 win32clipboard.CloseClipboard()
 if len(sys.argv) < 2:
     input("Missing command line parameter! Pass a number between 0 and {} for header depth".format(MAX_HEADER_DEPTH))
-    sys.exit()
+    sys.exit(1)
 headerDepth = sys.argv[1]
 try:
     headerDepth = int(headerDepth)
 except ValueError:
     print(sys.argv)
     input("Unrecognized argument! Pass a number between 0 and {}".format(MAX_HEADER_DEPTH))
-    sys.exit()
+    sys.exit(1)
 
 if headerDepth == 0:
     html = bodyTemplate.format(textFontSize, textColor, text)
     HtmlClipboard.PutHtml(html)
 elif headerDepth > MAX_HEADER_DEPTH or headerDepth < 0:
     input("Header depth {0} not within range 0 to {1}!".format(headerDepth, MAX_HEADER_DEPTH))
-    sys.exit()
+    sys.exit(1)
 else:
     idx = headerDepth - 1
     html = createHeaderHtml(text, headerFontSizes[idx], headerColors[idx], boldStates[idx], italicStates[idx])
