@@ -22,7 +22,7 @@ global pythonPath = ""
 Loop % splitPath.MaxIndex() 
 {
 	currPath := splitPath[A_Index]
-	found := RegExMatch(currPath, "[p|P]ython3.$")
+	found := RegExMatch(currPath, "[p|P]ython3.\\?$")
 	if (found != 0) {
 		global pythonPath = currPath . "\python.exe"
 	}
@@ -33,7 +33,9 @@ runPythonScript(path) {
 	if (pythonPath = "") {
 		MsgBox Can't execute python script because python3 was not found in PATH variable
 	}
-	RunWait %pythonPath% %path%
+	else {
+		RunWait %pythonPath% %path%
+	}
 }
 		
 global DE_KEY_LAYOUT = 0x4070407
