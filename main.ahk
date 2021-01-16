@@ -69,7 +69,7 @@ return
 changeFormattingToEvernoteHeader(headerLevel)
 {
 ;TODO select the entire line with SendPlay and Home
-Send, ^+{Left}
+Send, {SHIFT}+{Home}
 Sleep 30
 ClipBackup := Clipboard
 SendInput ^c
@@ -107,7 +107,7 @@ if (enableEvernote = false) {
     Send, ^0
     return
 }
-changeFormattingToEvernoteHeader("h0")
+changeFormattingToEvernoteHeader("0")
 return
 
 $^1::
@@ -115,7 +115,7 @@ if (enableEvernote = false) {
     Send, ^1
     return
 }
-changeFormattingToEvernoteHeader("h1")
+changeFormattingToEvernoteHeader("1")
 return
 
 $^2::
@@ -123,7 +123,7 @@ if (enableEvernote = false) {
     Send, ^2
     return
 }
-changeFormattingToEvernoteHeader("h2")
+changeFormattingToEvernoteHeader("2")
 return
 
 $^3::
@@ -131,7 +131,7 @@ if (enableEvernote = false) {
     Send, ^3
     return
 }
-changeFormattingToEvernoteHeader("h3")
+changeFormattingToEvernoteHeader("3")
 return
 
 $^g::
