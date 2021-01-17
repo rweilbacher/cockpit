@@ -1,5 +1,7 @@
 # Toggles the text color of the clipboard between red and black
 
+# TODO Make this more robust and flexible similar to evernote_header
+
 import HtmlClipboard
 import win32clipboard
 

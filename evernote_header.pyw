@@ -2,6 +2,8 @@
 # puts some HTML with style information around it and then puts it back into the HTML clipboard.
 # Which style information gets put around the text depends on the first command line argument
 
+# TODO Find out if I can generate a ToC (Maybe I can add hidden HTML attributes?)
+
 import HtmlClipboard
 import sys
 import win32clipboard
@@ -54,7 +56,11 @@ def createHeaderHtml(text, fontSize, textColor, bold, italics):
 
 
 win32clipboard.OpenClipboard()
-text = win32clipboard.GetClipboardData()
+try:
+    text = win32clipboard.GetClipboardData()
+except TypeError:
+    # Clip board data is not available
+    text = ""
 win32clipboard.CloseClipboard()
 if len(sys.argv) < 2:
     input("Missing command line parameter! Pass a number between 0 and {} for header depth".format(MAX_HEADER_DEPTH))
