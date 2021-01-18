@@ -19,6 +19,12 @@ def onRelease(key):
         startTime = 0
 
 
+def disable(event):
+    # I have no idea why the key would change depending on where I run it from (It's the same OS)
+    if event.key == "\r\n" or event.key == "\r" or event.key == "\n":
+        event.widget.disable()
+
+
 def updateLabel(text, timeRequired):
     if startTime == 0:
         text.clear()
@@ -38,6 +44,9 @@ timeRequired = guizero.TextBox(app, text="30", grid=[1, 0], width=3, align="left
 questionLabel = guizero.Text(app, text="Question", grid=[0, 1])
 question = guizero.TextBox(app, text="", grid=[1, 1], width=40)
 timeRemainingLabel = guizero.Text(app, text=SECONDS_REQUIRED, grid=[1, 3])
+
+question.focus()
+question.when_key_pressed = disable
 
 timeRemainingLabel.repeat(100, updateLabel, [timeRemainingLabel, timeRequired])
 app.display()
