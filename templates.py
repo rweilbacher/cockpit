@@ -19,33 +19,38 @@ import sys
 # Otherwise it won't show up in the query.
 # You can use Shift + Enter, indented bullets or copy the link to every bullet.
 # I assume this template could easily be adapted to similar platforms like https://www.remnote.io/
-daily_template = """- #{0} #[[{1}]] Summary 
+daily_template = """
+- {1} [[Morning routine]]
+    - __Reminders:__
+    - __Goals:__
+- --------------------------------
+- #{0} #[[{1}]] [[Summary]] 
     - #[[summary-{0}]] #[[{1}]]
 - #{0} #[[{1}]] Important events 
     - #[[events-{0}]] #[[{1}]]
-- #{0} #[[{1}]] Improvable 
+- #{0} #[[{1}]] [[Improvable]] 
     - How could I improve?
     - What could I have done better?
     - #[[better-{0}]] #[[{1}]]
-- #{0} #[[{1}]] Bad 
+- #{0} #[[{1}]] [[Bad]] 
     - What went badly that I had no influence on?
     - #[[bad-{0}]] #[[{1}]]
-- #{0} #[[{1}]] Good
+- #{0} #[[{1}]] [[Progress & Goals]]
+    - What progress did I make today?
+    - Did I achieve my daily goals?
+    - #[[progress-{0}]] #[[{1}]]
+- #{0} #[[{1}]] [[Good]]
     - What did I do well today?
     - #[[good-{0}]] #[[{1}]]
-- #{0} #[[{1}]] Best
+- #{0} #[[{1}]] [[Best]]
     - What do I need to do if I want to be the best version of myself?
     - #[[best-{0}]] #[[{1}]]
-- #{0} #[[{1}]] Progress
-    - What progress did I make towards my goals today?
-    - How am I improving?
-    - Why is this important?
-    - #[[progress-{0}]] #[[{1}]]
-- #{0} #[[{1}]] Gratitude
+- #{0} #[[{1}]] [[Gratitude]]
     - What am I grateful for today?
     - #[[gratitude-{0}]] #[[{1}]]"""
 
 # {0} must be replaced with the week number. e.g. week47
+# {1} must be replaced with next weeks number. e.g. week48
 # It must follow the same format as the week in the daily review
 # If you want to use this template to do monthly reviews, the same applies as for days:
 # All notes must be connected to a bullet with a link like: summary-week47-review
@@ -61,10 +66,14 @@ week_template = """- {{{{[[query]]: {{and: [[summary-{0}]]}}}}}}
     - #[[good-{0}-review]]
 - {{{{[[query]]: {{and: [[best-{0}]]}}}}}}
     - #[[best-{0}-review]]
+- {{{{[[query]]: {{and: [[gratitude-{0}]]}}}}}}
+    - #[[gratitude-{0}-review]]
 - {{{{[[query]]: {{and: [[progress-{0}]]}}}}}}
     - #[[progress-{0}-review]]
-- {{{{[[query]]: {{and: [[gratitude-{0}]]}}}}}}
-    - #[[gratitude-{0}-review]]"""
+- {{{{[[query]]: {{and: [[plan-{0}]]}}}}}}
+    - #[[plan-{0}-review]]
+- #{1} Plan for next week
+    - #[[plan-{1}]]"""
 
 weekdays = {0: "Mon", 1: "Tue", 2: "Wed", 3: "Thu", 4: "Fri", 5: "Sat", 6: "Sun"}
 
@@ -79,7 +88,8 @@ def copy_daily():
 def copy_weekly():
     today = datetime.date.today() + datetime.timedelta(days=int(day_offset_input.value))
     week = "week" + str(today.isocalendar()[1])
-    filled_template = week_template.format(week)
+    nextWeek = "week" + str(today.isocalendar()[1] + 1)
+    filled_template = week_template.format(week, nextWeek)
     pyperclip.copy(filled_template)
     sys.exit()
 # endregion
