@@ -24,7 +24,7 @@ Loop % splitPath.MaxIndex()
 	currPath := splitPath[A_Index]
 	found := RegExMatch(currPath, "[p|P]ython3.\\?$")
 	if (found != 0) {
-		global pythonPath = currPath . "\python.exe"
+		global pythonPath = currPath
 	}
 }
 		
@@ -43,17 +43,27 @@ join(sep, params*) {
     return SubStr(str, 1, -StrLen(sep))
 }
 
-runPythonScript(path, args*) {
+; Execute a python script
+; @param path The path to the python script
+; @param console true if console should be enabled, false if not
+; @param args* command line parameters that will be passed to the python script
+runPythonScript(path, console, args*) {
 	if (pythonPath = "") {
 		MsgBox Can't execute python script because python3 was not found in PATH variable
+		return
+	}
+	pythonExec := pythonPath
+	if (console = true) {
+	    pythonExec .= "\python.exe"
 	}
 	else {
-		argsString := join(" ", args*)
-		RunWait %pythonPath% %path% %argsString%,, UseErrorLevel
-		if (ErrorLevel != 0) {
-		    MsgBox, python script %path% encountered an error!
-		}
+	    pythonExec .= "\pythonw.exe"
 	}
+    argsString := join(" ", args*)
+    RunWait %pythonExec% %path% %argsString%,, UseErrorLevel
+    if (ErrorLevel != 0) {
+        MsgBox, python script %path% encountered an error!
+    }
 }
 
 ; --- General hotkeys ---
@@ -66,13 +76,17 @@ return
 
 ; Start the templates python script, which is a small GUI for selecting templates to load into the Clipboard
 !F2::
-runPythonScript(".\templates.py")
+runPythonScript(".\templates.py", false)
 return
 
 !F3::
 Hotkey, !2, Off
-runPythonScript(".\multi_paster.py")
+runPythonScript(".\multi_paster.py", true)
 Hotkey, !2, On
+return
+
+!F11::
+runPythonScript(".\question_timer.py", false)
 return
 
 ; --- Evernote Utils ---
@@ -84,7 +98,7 @@ Sleep 30
 ClipBackup := Clipboard
 SendInput ^c
 Sleep 30
-runPythonScript(".\evernote_header.pyw", headerLevel)
+runPythonScript(".\evernote_header.pyw", false, headerLevel)
 SendInput ^v
 Sleep 30
 Clipboard := ClipBackup
@@ -95,7 +109,7 @@ toggleEverNoteTextColor()
 ClipBackup := Clipboard
 SendInput ^c
 Sleep 50
-runPythonScript(".\evernote_textcolor.py")
+runPythonScript(".\evernote_textcolor.py", false)
 SendInput ^v
 Sleep 50
 Clipboard := ClipBackup
