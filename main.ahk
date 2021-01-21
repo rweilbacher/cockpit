@@ -89,6 +89,10 @@ return
 runPythonScript(".\question_timer.py", false)
 return
 
+!F5::
+runPythonScript(".\daily_template.py", true)
+return
+
 ; --- Evernote Utils ---
 
 changeFormattingToEvernoteHeader(headerLevel)
