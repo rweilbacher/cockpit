@@ -5,7 +5,7 @@ import subprocess
 
 DEBUG = False
 DEBUG_DATE = "1970-01-01"
-NOTEPAD_PATH = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\rograms\\Notepad++.lnk"
+NOTEPAD_PATH = "C:\\Program Files\\Notepad++\\notepad++.exe"
 
 TEMPLATE_FILE = "./daily_template.txt"
 
@@ -24,4 +24,4 @@ with open(TEMPLATE_FILE, "r") as file:
         sys.exit(1)
     with open(filePath, "w") as outFile:
         outFile.write(template)
-    # subprocess.run([NOTEPAD_PATH, filePath], check=True)
+    subprocess.run([NOTEPAD_PATH, filePath], check=True)
