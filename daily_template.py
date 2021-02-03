@@ -3,6 +3,9 @@ from os import path
 import sys
 import subprocess
 
+# TODO Open file instead of throwing an error when file already exists
+# TODO Allow creating a file for the next day
+
 DEBUG = False
 DEBUG_DATE = "1970-01-01"
 NOTEPAD_PATH = "C:\\Program Files\\Notepad++\\notepad++.exe"
