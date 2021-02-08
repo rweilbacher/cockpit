@@ -231,3 +231,4 @@ return
 ::imt::important
 ::assu::assumption
 ::urose::purpose
+::andre::andré

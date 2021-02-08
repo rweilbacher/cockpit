@@ -22,6 +22,10 @@ import sys
 daily_template = """
 - {1} [[Morning routine]]
     - __Reminders:__
+        - Focus on stabilization not transcendence
+        - Small but steady improvements. Do a little bit every day! But push yourself at least somewhat to become stronger.
+        - Look left and right. You can do more things than come to mind in any one moment.
+        - Respect opportunity value. Be the right person, in the right place, at the right time.
     - __Goals:__
 - --------------------------------
 - #{0} #[[{1}]] [[Summary]] 
