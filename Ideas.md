@@ -1,0 +1,3 @@
+- Very simple task manager with minimal friction -> Might be solved by org-mode?
+- Ctrl+Alt+Up/Down to move lines
+- Format clipboard contents that were copied from Notepad++ for use in other programs
