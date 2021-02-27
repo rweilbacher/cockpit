@@ -85,8 +85,12 @@ runPythonScript(".\multi_paster.py", true)
 Hotkey, !2, On
 return
 
+!F10::
+runPythonScript(".\pihole_blocker.py", false)
+return
+
 !F11::
-runPythonScript(".\question_timer.py", false)
+runPythonScript(".\willpower_timer.py", false)
 return
 
 !F5::
