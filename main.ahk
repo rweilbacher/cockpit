@@ -213,6 +213,17 @@ else if (inputLocaleId = DE_KEY_LAYOUT) {
     Send, ö
 }
 return
+
+; Alternative Backspace to reduce strain on right hand
+$^::
+inputLocaleId := getInputLocaleId()
+if (inputLocaleId = DE_KEY_LAYOUT) {
+    Send, {Backspace}
+}
+else if (inputLocaleId = EN_KEY_LAYOUT) {
+    Send, ^
+}
+return
 														
 ; --- Word expansions ---
 

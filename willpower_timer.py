@@ -86,9 +86,9 @@ def updateActions(checkBox):
     elif checkBox.text == "Enable reddit":
         enableReddit = bool(checkBox.value)
     elif checkBox.text == "Enable other":
-        enableHighDopamine = bool(checkBox.value)
-    elif checkBox.text == "Enable dopamine sites":
         enableOther = bool(checkBox.value)
+    elif checkBox.text == "Enable dopamine sites":
+        enableHighDopamine = bool(checkBox.value)
 
 
 listener = keyboard.Listener(on_press=onPress, on_release=onRelease)
