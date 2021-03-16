@@ -247,3 +247,4 @@ return
 ::assu::assumption
 ::urose::purpose
 ::andre::andré
+::bjoern::björn
