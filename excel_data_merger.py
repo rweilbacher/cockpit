@@ -14,7 +14,7 @@ def getKeys(ws, row):
 
 
 def getRowWithKeys(ws, keys):
-    for row in range(1, ws.max_row):
+    for row in range(1, ws.max_row + 1):
         innerKeys = getKeys(ws, row)
         # Requires that the key columns are in the same order in both sheets
         if keys == innerKeys:
@@ -28,7 +28,12 @@ ws1 = wb["Sheet1"]
 ws2 = wb["Sheet2"]
 ws3 = wb.create_sheet("Result")
 
-for row in range(1, ws1.max_row):
+# Copy Headers
+for column in range(1, ws2.max_column + 1):
+    ws3.cell(1, column).value = ws2.cell(1, column).value
+
+
+for row in range(2, ws1.max_row + 1):
     keys = getKeys(ws1, row)
     for i in range(0, KEY_COLUMN_AMOUNT):
         ws3.cell(row, i + 1).value = keys[i]
@@ -36,7 +41,7 @@ for row in range(1, ws1.max_row):
     innerRow = getRowWithKeys(ws2, keys)
     if innerRow == -1:
         continue
-    for column in range(KEY_COLUMN_AMOUNT + 1, ws2.max_column):
+    for column in range(KEY_COLUMN_AMOUNT + 1, ws2.max_column + 1):
         ws3.cell(row, column).value = ws2.cell(innerRow, column).value
 
 
