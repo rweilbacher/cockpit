@@ -1,10 +1,10 @@
 from openpyxl import Workbook, load_workbook
+import sys
 
 KEY_COLUMN_AMOUNT = 2
 # KEEP_UNMATCHED_ROWS_FROM_FIRST = True
 
-# TODO Verify data
-# TODO Add column names from second sheet
+filename = sys.argv[1]
 
 def getKeys(ws, row):
     keys = []
@@ -22,7 +22,7 @@ def getRowWithKeys(ws, keys):
     return -1
 
 
-wb = load_workbook("relevant_methods_2021_02.xlsx")
+wb = load_workbook(filename)
 
 ws1 = wb["Sheet1"]
 ws2 = wb["Sheet2"]
@@ -34,6 +34,7 @@ for column in range(1, ws2.max_column + 1):
 
 
 for row in range(2, ws1.max_row + 1):
+    print("Row {} of {}".format(row, ws1.max_row))
     keys = getKeys(ws1, row)
     for i in range(0, KEY_COLUMN_AMOUNT):
         ws3.cell(row, i + 1).value = keys[i]
