@@ -97,6 +97,19 @@ return
 runPythonScript(".\daily_template.py", true)
 return
 
+; --- Markdown Utils ---
+
+#!c:: ; win+alt+c
+ctmp := Clipboard ; what's currently on the clipboard
+clipboard := ""
+SendInput ^c ; copy to clipboard
+ClipWait, 2 ; wait for the clipboard to change
+Clipboard := "[" . Clipboard . "](" . ctmp . ")"
+SendInput ^v
+Clipboard := ctmp
+Return
+
+
 ; --- Evernote Utils ---
 
 changeFormattingToEvernoteHeader(headerLevel)
