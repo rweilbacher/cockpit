@@ -29,8 +29,7 @@ with open(TEMPLATE_FILE, "r") as file:
     template = file.read()
     fileName = isoDate + "_" + weekday + "_" + fileNameSuffix + ".txt"
     filePath += "\\" + fileName
-    if path.exists(filePath):
-        subprocess.run([NOTEPAD_PATH, filePath], check=True)
-    with open(filePath, "w") as outFile:
-        outFile.write(template)
+    if path.exists(filePath) is False:
+        with open(filePath, "w") as outFile:
+            outFile.write(template)
     subprocess.run([NOTEPAD_PATH, filePath], check=True)
