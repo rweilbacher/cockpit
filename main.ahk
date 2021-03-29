@@ -105,11 +105,13 @@ return
 
 #!c:: ; win+alt+c
 ctmp := Clipboard ; what's currently on the clipboard
-clipboard := ""
+Clipboard := ""
 SendInput ^c ; copy to clipboard
 ClipWait, 2 ; wait for the clipboard to change
 Clipboard := "[" . Clipboard . "](" . ctmp . ")"
+Sleep 30
 SendInput ^v
+Sleep 30
 Clipboard := ctmp
 Return
 
