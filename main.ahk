@@ -94,7 +94,11 @@ runPythonScript(".\willpower_timer.py", false)
 return
 
 !F5::
-runPythonScript(".\daily_template.py", true)
+runPythonScript(".\daily_template.py", false)
+return
+
+!+F5::
+runPythonScript(".\daily_template.py", false, 1)
 return
 
 ; --- Markdown Utils ---
