@@ -257,6 +257,7 @@ return
 ::wont::won't
 ::havent::haven't
 ::couldnt::couldn't
+::arent::aren't
 ::wouldnt::wouldn't
 ::wasnt::wasn't
 ::didnt::didn't
