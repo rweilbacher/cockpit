@@ -1,7 +1,7 @@
 from openpyxl import Workbook, load_workbook
 import sys
 
-KEY_COLUMN_AMOUNT = 2
+KEY_COLUMN_AMOUNT = 1
 # KEEP_UNMATCHED_ROWS_FROM_FIRST = True
 
 filename = sys.argv[1]
@@ -39,11 +39,16 @@ for row in range(2, ws1.max_row + 1):
     for i in range(0, KEY_COLUMN_AMOUNT):
         ws3.cell(row, i + 1).value = keys[i]
 
+    # Copy data columns from sheet 1 to result sheet
+    ws1DataColumnAmount = ws1.max_column - KEY_COLUMN_AMOUNT
+    for column in range (KEY_COLUMN_AMOUNT + 1, ws1.max_column + 1):
+        ws3.cell(row, column).value = ws1.cell(row, column).value
+
     innerRow = getRowWithKeys(ws2, keys)
     if innerRow == -1:
         continue
     for column in range(KEY_COLUMN_AMOUNT + 1, ws2.max_column + 1):
-        ws3.cell(row, column).value = ws2.cell(innerRow, column).value
+        ws3.cell(row, column + ws1DataColumnAmount).value = ws2.cell(innerRow, column).value
 
 
 wb.save("result.xlsx")
