@@ -277,6 +277,7 @@ return
 ::andre::andré
 ::bjoern::björn
 
+TODO Disable hotkeys instead of checking
 replaceUmlaut(umlaut, alternativeEncoding) {
     inputLocaleId := getInputLocaleId()
     if (inputLocaleId = DE_KEY_LAYOUT) {
