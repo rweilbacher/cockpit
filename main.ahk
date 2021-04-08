@@ -15,6 +15,8 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; global variable to enable and disable custom Evernote hotkeys, since they might clash with other applications
 global enableEvernote = false
 
+global alternative_umlauts = true
+
 ; Find python3 based on PATH variable
 EnvGet, envPath, PATH
 splitPath := StrSplit(envPath, ";")
@@ -101,6 +103,17 @@ return
 runPythonScript(".\daily_template.py", false, 1)
 return
 
+!q::
+if (alternative_umlauts = true) {
+    global alternative_umlauts = false
+	TrayTip, Umlaut switch, off
+}
+else {
+    global alternative_umlauts = true
+	TrayTip, Umlaut switch, on
+}
+return
+
 ; --- Markdown Utils ---
 
 #!c:: ; win+alt+c
@@ -145,11 +158,11 @@ Clipboard := ClipBackup
 !F12::
 if (enableEvernote = true) {
     global enableEvernote = false
-	MsgBox, Disabled Evernote hotkeys
+	TrayTip, Evernote Hotkeys, off
 }
 else {
     global enableEvernote = true
-	MsgBox, Enabled Evernote hotkeys
+	TrayTip, Evernote Hotkeys, on
 }
 return
 
@@ -214,11 +227,6 @@ return
 ; Alternative Mouse scroll to reduce strain on right hand
 !w::
 Click WheelUp
-return	
-
-; Alternative Enter to reduce strain on right hand
-!q::
-Send, {Enter}
 return
 
 ; Alternative Backspace to reduce strain on right hand
@@ -268,3 +276,31 @@ return
 ::urose::purpose
 ::andre::andré
 ::bjoern::björn
+
+replaceUmlaut(umlaut, alternativeEncoding) {
+    inputLocaleId := getInputLocaleId()
+    if (inputLocaleId = DE_KEY_LAYOUT) {
+        Send, %alternativeEncoding%
+    }
+    else if (inputLocaleId = EN_KEY_LAYOUT) {
+        if (alternative_umlauts = true) {
+            Send, %umlaut%
+        }
+        else {
+            Send, %alternativeEncoding%
+        }
+    }
+}
+
+:*:ue::
+replaceUmlaut("ü", "ue")
+return
+
+:*:oe::
+replaceUmlaut("ö", "oe")
+return
+
+:*:ae::
+replaceUmlaut("ä", "ae")
+return
+
