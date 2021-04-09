@@ -15,7 +15,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; global variable to enable and disable custom Evernote hotkeys, since they might clash with other applications
 global enableEvernote = false
 
-global alternative_umlauts = true
+global alternative_umlauts = false
 
 ; Find python3 based on PATH variable
 EnvGet, envPath, PATH
