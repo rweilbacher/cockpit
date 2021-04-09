@@ -293,19 +293,19 @@ replaceUmlaut(umlaut, alternativeEncoding) {
     }
 }
 
-:?*:ue::
-replaceUmlaut("ü", "ue")
-return
+;:?*:ue::
+;replaceUmlaut("ü", "ue")
+;return
 
-:?*:oe::
-replaceUmlaut("ö", "oe")
-return
+;:?*:oe::
+;replaceUmlaut("ö", "oe")
+;return
 
-:?*:ae::
-replaceUmlaut("ä", "ae")
-return
+;:?*:ae::
+;replaceUmlaut("ä", "ae")
+;return
 
-:?*:sss::
-replaceUmlaut("ß", "sss")
-return
+;:?*:sss::
+;replaceUmlaut("ß", "sss")
+;return
 
