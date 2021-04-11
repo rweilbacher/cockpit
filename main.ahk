@@ -128,6 +128,17 @@ Sleep 30
 Clipboard := ctmp
 Return
 
+; --- Paste formatting ---
+
+; Replaces all newlines in the Clipboard with spaces
+^!v::
+StringReplace, Clipboard, Clipboard, `r, , A
+ClipWait, 2
+StringReplace, Clipboard, Clipboard, `n, %A_Space%, A
+ClipWait, 2
+SendInput ^v
+return
+
 
 ; --- Evernote Utils ---
 
@@ -277,7 +288,8 @@ return
 ::andre::andré
 ::bjoern::björn
 
-;TODO Disable hotkeys instead of checking
+; TODO Disable hotkeys instead of checking
+; TODO Or go the other way. Make symbols easier to use on qwertz
 replaceUmlaut(umlaut, alternativeEncoding) {
     inputLocaleId := getInputLocaleId()
     if (inputLocaleId = DE_KEY_LAYOUT) {
