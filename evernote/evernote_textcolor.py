@@ -2,7 +2,7 @@
 
 # TODO Make this more robust and flexible similar to evernote_header
 
-import HtmlClipboard
+import libs.HtmlClipboard as HtmlClipboard
 import win32clipboard
 
 redText = """

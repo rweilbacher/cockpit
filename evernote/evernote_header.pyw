@@ -4,7 +4,7 @@
 
 # TODO Find out if I can generate a ToC (Maybe I can add hidden HTML attributes?)
 
-import HtmlClipboard
+import libs.HtmlClipboard as HtmlClipboard
 import sys
 import win32clipboard
 

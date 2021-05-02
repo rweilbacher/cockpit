@@ -1,6 +1,6 @@
 import subprocess
 
-INPUT_FILE = "input.txt"
+INPUT_FILE = "multi_paster_input.txt"
 # This name cannot contain any spaces or shell metacharacters like : or \
 OUTPUT_FILE = "multi_paster.ahk"
 AHK_PATH = "C:\Program Files\AutoHotkey\AutoHotkey.exe"

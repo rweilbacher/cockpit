@@ -78,29 +78,29 @@ return
 
 ; Start the templates python script, which is a small GUI for selecting templates to load into the Clipboard
 !F2::
-runPythonScript(".\templates.py", false)
+runPythonScript(".\general\templates.py", false)
 return
 
 !F3::
 Hotkey, !2, Off
-runPythonScript(".\multi_paster.py", true)
+runPythonScript(".\general\multi_paster.py", true)
 Hotkey, !2, On
 return
 
 !F10::
-runPythonScript(".\pihole_blocker.py", false)
+runPythonScript(".\pihole\pihole_blocker.py", false)
 return
 
 !F11::
-runPythonScript(".\willpower_timer.py", false)
+runPythonScript(".\general\willpower_timer.py", false)
 return
 
 !F5::
-runPythonScript(".\daily_template.py", false)
+runPythonScript(".\general\daily_template.py", false)
 return
 
 !+F5::
-runPythonScript(".\daily_template.py", false, 1)
+runPythonScript(".\general\daily_template.py", false, 1)
 return
 
 !q::
@@ -149,7 +149,7 @@ Sleep 30
 ClipBackup := Clipboard
 SendInput ^c
 Sleep 30
-runPythonScript(".\evernote_header.pyw", false, headerLevel)
+runPythonScript(".\evernote\evernote_header.pyw", false, headerLevel)
 SendInput ^v
 Sleep 30
 Clipboard := ClipBackup
@@ -160,7 +160,7 @@ toggleEverNoteTextColor()
 ClipBackup := Clipboard
 SendInput ^c
 Sleep 50
-runPythonScript(".\evernote_textcolor.py", false)
+runPythonScript(".\evernote\evernote_textcolor.py", false)
 SendInput ^v
 Sleep 50
 Clipboard := ClipBackup
