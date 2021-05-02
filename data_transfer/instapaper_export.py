@@ -83,7 +83,7 @@ if export_folder_id is None:
 marks = i.bookmarks(folder=export_folder_id, limit=100)
 
 if len(marks) == 0:
-    print("No new highlights found!")
+    print("No new bookmarks found!")
 
 for mark in marks:
     filename = sanitize_path(mark.title)
@@ -96,3 +96,4 @@ for mark in marks:
     mark.move(exported_folder_id)
     print("Done with bookmark!")
 print("Done!")
+input("Press Enter to exit: ")
