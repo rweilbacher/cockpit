@@ -1,5 +1,5 @@
 /venv/
-/credentials.py
+/data_transfer/credentials.py
 /multi_paster.ahk
 /input.txt
 /daily_template.txt

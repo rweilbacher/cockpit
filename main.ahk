@@ -68,6 +68,25 @@ runPythonScript(path, console, args*) {
     }
 }
 
+runPythonModule(module, console, args*) {
+	if (pythonPath = "") {
+		MsgBox Can't execute python script because python3 was not found in PATH variable
+		return
+	}
+	pythonExec := pythonPath
+	if (console = true) {
+	    pythonExec .= "\python.exe"
+	}
+	else {
+	    pythonExec .= "\pythonw.exe"
+	}
+    argsString := join(" ", args*)
+    RunWait %pythonExec% -m %module% %argsString%,, UseErrorLevel
+    if (ErrorLevel != 0) {
+        MsgBox, python script %module% encountered an error!
+    }
+}
+
 ; --- General hotkeys ---
 
 ; Send the current date in ISO format
@@ -112,6 +131,10 @@ else {
     global alternative_umlauts = true
 	TrayTip, Umlaut switch, on
 }
+return
+
+!F9::
+runPythonModule("data_transfer.instapaper_export", true)
 return
 
 ; --- Markdown Utils ---

@@ -1,5 +1,5 @@
 # Access to my personal secrets
-from libs.credentials import instapaper as credentials
+from .credentials import instapaper as credentials
 from instapaper import Instapaper as ipaper
 import os
 import datetime
