@@ -137,6 +137,37 @@ return
 runPythonModule("data_transfer.instapaper_export", true)
 return
 
+moveLine(direction) {
+    sleep_time := 20
+    Send, {End}
+    Sleep, %sleep_time%
+    Send, {SHIFT}+{Home}
+    Sleep, %sleep_time%
+    ClipBackup := Clipboard
+    Send, ^x
+    ClipWait, 2 ; wait for the clipboard to change
+    Sleep, %sleep_time%
+    Send, {Backspace}
+    Sleep, %sleep_time%
+    Send, {%direction%}
+    Sleep, %sleep_time%
+    Send, {End}
+    Sleep, %sleep_time%
+    Send {Enter}
+    Sleep, %sleep_time%
+    SendInput, ^v
+    Sleep, %sleep_time%
+    Clipboard := ClipBackup
+}
+
+^+Down::
+moveLine("Down")
+return
+
+^+Up::
+moveLine("Up")
+return
+
 ; --- Markdown Utils ---
 
 #!c:: ; win+alt+c
