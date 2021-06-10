@@ -324,6 +324,8 @@ return
 ::prio::priority 
 ::aes::aesthetic
 ::delib::deliberately
+::conti::continuous
+::conty::continuously
 ::consc::consciousness
 ::conscy::consciously
 ::dont::don't
