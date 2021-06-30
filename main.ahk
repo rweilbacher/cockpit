@@ -34,7 +34,7 @@ global DE_KEY_LAYOUT = 0x4070407
 global EN_KEY_LAYOUT = 0x4090409
 
 ; Hotkeys that make small changes and reloads much faster
-+F5::Edit ; Shift-F5 launches the current AutoHotkey script in preferred editor, else Notepad
+;+F5::Edit ; Shift-F5 launches the current AutoHotkey script in preferred editor, else Notepad
 ^F5::Reload ; Ctrl-F5 reloads the current AutoHotKey script after any edits.
 
 ; --- Helper functions ---
@@ -160,13 +160,14 @@ moveLine(direction) {
     Clipboard := ClipBackup
 }
 
-^+Down::
-moveLine("Down")
-return
+; As expected these hotkeys were too unstable to be usable
+;^+Down::
+;moveLine("Down")
+;return
 
-^+Up::
-moveLine("Up")
-return
+;^+Up::
+;moveLine("Up")
+;return
 
 ; --- Markdown Utils ---
 
