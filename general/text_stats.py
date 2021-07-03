@@ -54,7 +54,7 @@ def analyze(text, state):
         if re.search("[a-z]|[A-Z]|ä|Ä|ö|Ö|ü|Ü", char) is not None:
             state.word_length += 1
             continue
-        if char == ".":
+        if char == "." or char == "!" or char == "?" or char == ":":
             end_sentence(state)
             continue
         else:
