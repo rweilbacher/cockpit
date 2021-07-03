@@ -63,8 +63,11 @@ runPythonScript(path, console, args*) {
 	}
     argsString := join(" ", args*)
     RunWait %pythonExec% %path% %argsString%,, UseErrorLevel
-    if (ErrorLevel != 0) {
+    if (ErrorLevel < 0) {
         MsgBox, python script %path% encountered an error!
+    }
+    else {
+        return ErrorLevel
     }
 }
 
@@ -82,9 +85,23 @@ runPythonModule(module, console, args*) {
 	}
     argsString := join(" ", args*)
     RunWait %pythonExec% -m %module% %argsString%,, UseErrorLevel
-    if (ErrorLevel != 0) {
+    MsgBox, %ErrorLevel%
+    if (ErrorLevel < 0) {
         MsgBox, python script %module% encountered an error!
     }
+    else {
+        return ErrorLevel
+    }
+}
+
+readResultFile() {
+    if (! FileExist(".\tmp_result")) {
+        TrayTip, Error, Result not found, 3
+        return
+    }
+    FileRead, result, .\tmp_result
+    FileDelete, .\tmp_result
+    return result
 }
 
 ; --- General hotkeys ---
@@ -135,6 +152,16 @@ return
 
 !F9::
 runPythonModule("data_transfer.instapaper_export", true)
+return
+
+!g::
+ctmp := Clipboard ; what's currently on the clipboard
+SendInput ^c ; copy to clipboard
+ClipWait, 2
+runPythonScript(".\general\text_stats.py", false)
+result := readResultFile()
+TrayTip, Text statistics, %result%, 16
+Clipboard := ctmp
 return
 
 moveLine(direction) {
