@@ -175,32 +175,6 @@ TrayTip, Text statistics, %result%, 16
 Clipboard := ctmp
 return
 
-global altShiftDownTime = 0
-~!LShift::
-altShiftDownTime := A_NowUTC
-; No idea why but you need to wait here
-KeyWait, LShift
-return
-
-; Play sound and display tray icon on keyboard layout switch
-~!LShift Up::
-elapsed := A_NowUTC - altShiftDownTime
-if (elapsed >= 1) {
-    ; Shift + Alt was pressed for longer than 1 sec and I didn't intend to switch language
-    return
-}
-
-locale := getInputLocaleId()
-if (locale = DE_KEY_LAYOUT) {
-    SoundPlay, .\de.wav
-    TrayTip, DEU, DEU,
-}
-else if (locale = EN_KEY_LAYOUT) {
-    SoundPlay, .\en.wav
-    TrayTip, ENG, ENG
-}
-return
-
 moveLine(direction) {
     sleep_time := 20
     Send, {End}
@@ -232,6 +206,134 @@ moveLine(direction) {
 ;^+Up::
 ;moveLine("Up")
 ;return
+
+; --- Keyboard layout hotkeys ---
+
+; Play sound and display tray icon on keyboard layout switch
+global altShiftDownTime = 0
+~!LShift::
+altShiftDownTime := A_NowUTC
+; No idea why but you need to wait here
+KeyWait, LShift
+return
+~!LShift Up::
+elapsed := A_NowUTC - altShiftDownTime
+if (elapsed >= 2) {
+    ; Shift + Alt was pressed for longer than 1 sec and I didn't intend to switch language
+    return
+}
+locale := getInputLocaleId()
+if (locale = DE_KEY_LAYOUT) {
+    SoundPlay, .\de.wav
+    TrayTip, DEU, DEU,
+}
+else if (locale = EN_KEY_LAYOUT) {
+    SoundPlay, .\en.wav
+    TrayTip, ENG, ENG
+}
+return
+
+; Permanent rebind for y & z on German keyboard
+
+$y::
+locale := getInputLocaleId()
+if (locale = EN_KEY_LAYOUT) {
+    Send, y
+    return
+}
+Send, z
+return
+
+$z::
+locale := getInputLocaleId()
+if (locale = EN_KEY_LAYOUT) {
+    Send, z
+    return
+}
+Send, y
+return
+
+; -- More convenient hotkeys for []{};:'" on the German keyboard layout--
+
+; - ü -
+
+$#vkBA::
+locale := getInputLocaleId()
+if (locale = EN_KEY_LAYOUT) {
+    Send, {LWin}{vkBA}
+    return
+}
+Send, [
+return
+
+$+#vkBA::
+locale := getInputLocaleId()
+if (locale = EN_KEY_LAYOUT) {
+    Send, {LWin}{vkBA}
+    return
+}
+Send, {{}
+return
+
+; - + -
+
+$#SC01B::
+locale := getInputLocaleId()
+if (locale = EN_KEY_LAYOUT) {
+    Send, {LWin}{SC01B}
+    return
+}
+Send, ]
+return
+
+$+#SC01B::
+locale := getInputLocaleId()
+if (locale = EN_KEY_LAYOUT) {
+    Send, {LShift}{LWin}{SC01B}
+    return
+}
+Send, {}}
+return
+
+; - ö -
+
+$#vkC0::
+locale := getInputLocaleId()
+if (locale = EN_KEY_LAYOUT) {
+    Send, {LWin}{vkC0}
+    return
+}
+Send, `;
+return
+
+$+#vkC0::
+locale := getInputLocaleId()
+if (locale = EN_KEY_LAYOUT) {
+    Send, {LShift}{LWin}{vkC0}
+    return
+}
+Send, :
+return
+
+; - ä -
+
+$#vkDE::
+locale := getInputLocaleId()
+if (locale = EN_KEY_LAYOUT) {
+    Send, {LWin}{vkDE}
+    return
+}
+Send, '
+return
+
+$+#vkDE::
+locale := getInputLocaleId()
+if (locale = EN_KEY_LAYOUT) {
+    Send, {LShift}{LWin}{vkDE}
+    return
+}
+Send, "
+return
 
 ; --- Markdown Utils ---
 
