@@ -185,7 +185,6 @@ return
 ; Play sound and display tray icon on keyboard layout switch
 ~!LShift Up::
 elapsed := A_NowUTC - altShiftDownTime
-MsgBox, %elapsed%
 if (elapsed >= 1) {
     ; Shift + Alt was pressed for longer than 1 sec and I didn't intend to switch language
     return
