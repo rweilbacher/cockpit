@@ -104,6 +104,17 @@ readResultFile() {
     return result
 }
 
+; Find out the ID of the current keyboard layout
+; I often switch between German and English
+getInputLocaleId()
+{
+SetFormat, Integer, H
+  WinGet, WinID,, A
+  ThreadID:=DllCall("GetWindowThreadProcessId", "UInt", WinID, "UInt", 0)
+  InputLocaleID:=DllCall("GetKeyboardLayout", "UInt", ThreadID, "UInt")
+  return InputLocaleID
+}
+
 ; --- General hotkeys ---
 
 ; Send the current date in ISO format
@@ -162,6 +173,33 @@ runPythonScript(".\general\text_stats.py", false)
 result := readResultFile()
 TrayTip, Text statistics, %result%, 16
 Clipboard := ctmp
+return
+
+global altShiftDownTime = 0
+~!LShift::
+altShiftDownTime := A_NowUTC
+; No idea why but you need to wait here
+KeyWait, LShift
+return
+
+; Play sound and display tray icon on keyboard layout switch
+~!LShift Up::
+elapsed := A_NowUTC - altShiftDownTime
+MsgBox, %elapsed%
+if (elapsed >= 1) {
+    ; Shift + Alt was pressed for longer than 1 sec and I didn't intend to switch language
+    return
+}
+
+locale := getInputLocaleId()
+if (locale = DE_KEY_LAYOUT) {
+    SoundPlay, .\de.wav
+    TrayTip, DEU, DEU,
+}
+else if (locale = EN_KEY_LAYOUT) {
+    SoundPlay, .\en.wav
+    TrayTip, ENG, ENG
+}
 return
 
 moveLine(direction) {
@@ -300,17 +338,6 @@ toggleEverNoteTextColor()
 return
 
 ; --- Reduce strain on right hand ---
-
-; Find out the ID of the current keyboard layout
-; I often switch between German and English
-getInputLocaleId()
-{
-SetFormat, Integer, H
-  WinGet, WinID,, A
-  ThreadID:=DllCall("GetWindowThreadProcessId", "UInt", WinID, "UInt", 0)
-  InputLocaleID:=DllCall("GetKeyboardLayout", "UInt", ThreadID, "UInt")
-  return InputLocaleID
-}
 
 ; Alternative Mouse scroll to reduce strain on right hand
 !s::
