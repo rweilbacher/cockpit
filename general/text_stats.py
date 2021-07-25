@@ -1,6 +1,6 @@
 import sys
 import re
-from enum import Enum
+import numpy
 import win32clipboard
 
 win32clipboard.OpenClipboard()
@@ -67,7 +67,15 @@ state = State()
 analyze(text, state)
 
 result = "Avg word length: {}\n".format(state.avg_word_length())
-result += "Avg sentence length: {}".format(state.avg_sentence_length())
+result += "Avg sentence length: {}\n".format(state.avg_sentence_length())
+stddev = round(numpy.std(state.sentences), 2)
+if stddev < 5:
+    rating = "Low"
+elif stddev < 10:
+    rating = "Moderate"
+else:
+    rating = "High"
+result += "Variation: {} ({})".format(stddev, rating)
 
 file = open("tmp_result", "w")
 file.write(result)

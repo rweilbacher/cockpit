@@ -63,11 +63,8 @@ runPythonScript(path, console, args*) {
 	}
     argsString := join(" ", args*)
     RunWait %pythonExec% %path% %argsString%,, UseErrorLevel
-    if (ErrorLevel < 0) {
-        MsgBox, python script %path% encountered an error!
-    }
-    else {
-        return ErrorLevel
+    if (ErrorLevel != 0) {
+        MsgBox, python script %module% encountered an error with error code: %ErrorLevel%!
     }
 }
 
@@ -85,12 +82,8 @@ runPythonModule(module, console, args*) {
 	}
     argsString := join(" ", args*)
     RunWait %pythonExec% -m %module% %argsString%,, UseErrorLevel
-    MsgBox, %ErrorLevel%
-    if (ErrorLevel < 0) {
-        MsgBox, python script %module% encountered an error!
-    }
-    else {
-        return ErrorLevel
+    if (ErrorLevel != 0) {
+        MsgBox, python script %module% encountered an error with error code: %ErrorLevel%!
     }
 }
 
@@ -150,26 +143,27 @@ return
 runPythonScript(".\general\daily_template.py", false, 1)
 return
 
-!q::
-if (alternative_umlauts = true) {
-    global alternative_umlauts = false
-	TrayTip, Umlaut switch, off
-}
-else {
-    global alternative_umlauts = true
-	TrayTip, Umlaut switch, on
-}
-return
+;!q::
+;if (alternative_umlauts = true) {
+;    global alternative_umlauts = false
+;	TrayTip, Umlaut switch, off
+;}
+;else {
+;    global alternative_umlauts = true
+;	TrayTip, Umlaut switch, on
+;}
+;return
 
 !F9::
 runPythonModule("data_transfer.instapaper_export", true)
 return
 
+; Text statistics
 !g::
 ctmp := Clipboard ; what's currently on the clipboard
 SendInput ^c ; copy to clipboard
 ClipWait, 2
-runPythonScript(".\general\text_stats.py", false)
+runPythonScript(".\general\text_stats.py", true)
 result := readResultFile()
 TrayTip, Text statistics, %result%, 16
 Clipboard := ctmp
@@ -234,7 +228,6 @@ else if (locale = EN_KEY_LAYOUT) {
 return
 
 ; Permanent rebind for y & z on German keyboard
-
 $y::
 locale := getInputLocaleId()
 if (locale = EN_KEY_LAYOUT) {
@@ -251,6 +244,24 @@ if (locale = EN_KEY_LAYOUT) {
     return
 }
 Send, y
+return
+
+$+y::
+locale := getInputLocaleId()
+if (locale = EN_KEY_LAYOUT) {
+    Send, Y
+    return
+}
+Send, Z
+return
+
+$+z::
+locale := getInputLocaleId()
+if (locale = EN_KEY_LAYOUT) {
+    Send, Z
+    return
+}
+Send, Y
 return
 
 ; -- More convenient hotkeys for []{};:'" on the German keyboard layout--
@@ -337,6 +348,7 @@ return
 
 ; --- Markdown Utils ---
 
+; Create hyperlink based on selection and clipboard
 #!c:: ; win+alt+c
 ctmp := Clipboard ; what's currently on the clipboard
 Clipboard := ""
