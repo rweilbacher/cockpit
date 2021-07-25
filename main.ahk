@@ -163,7 +163,7 @@ return
 ctmp := Clipboard ; what's currently on the clipboard
 SendInput ^c ; copy to clipboard
 ClipWait, 2
-runPythonScript(".\general\text_stats.py", true)
+runPythonScript(".\general\text_stats.py", false)
 result := readResultFile()
 TrayTip, Text statistics, %result%, 16
 Clipboard := ctmp
