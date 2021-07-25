@@ -143,17 +143,6 @@ return
 runPythonScript(".\general\daily_template.py", false, 1)
 return
 
-;!q::
-;if (alternative_umlauts = true) {
-;    global alternative_umlauts = false
-;	TrayTip, Umlaut switch, off
-;}
-;else {
-;    global alternative_umlauts = true
-;	TrayTip, Umlaut switch, on
-;}
-;return
-
 !F9::
 runPythonModule("data_transfer.instapaper_export", true)
 return
@@ -511,37 +500,4 @@ return
 ::urose::purpose
 ::andre::andré
 ::bjoern::björn
-
-; TODO Disable hotkeys instead of checking
-; TODO Or go the other way. Make symbols easier to use on qwertz
-replaceUmlaut(umlaut, alternativeEncoding) {
-    inputLocaleId := getInputLocaleId()
-    if (inputLocaleId = DE_KEY_LAYOUT) {
-        Send, %alternativeEncoding%
-    }
-    else if (inputLocaleId = EN_KEY_LAYOUT) {
-        if (alternative_umlauts = true) {
-            Send, %umlaut%
-        }
-        else {
-            Send, %alternativeEncoding%
-        }
-    }
-}
-
-;:?*:ue::
-;replaceUmlaut("ü", "ue")
-;return
-
-;:?*:oe::
-;replaceUmlaut("ö", "oe")
-;return
-
-;:?*:ae::
-;replaceUmlaut("ä", "ae")
-;return
-
-;:?*:sss::
-;replaceUmlaut("ß", "sss")
-;return
 

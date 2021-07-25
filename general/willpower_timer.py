@@ -9,7 +9,8 @@ SECONDS_REQUIRED = "60"
 startTime = 0
 
 enableYouTube = False
-enableReddit = False
+# enableReddit = False
+enableMoneySinks = False
 enableHighDopamine = False
 enableOther = False
 
@@ -51,16 +52,19 @@ def updateLabel(text, timeRequired):
 def executeActions():
     global app
     print(f"Enable YouTube: {enableYouTube}")
-    print(f"Enable reddit: {enableReddit}")
+    # print(f"Enable reddit: {enableReddit}")
+    print(f"Enable money sinks: {enableMoneySinks}")
     print(f"Enable other: {enableOther}")
     print(f"Enable high dopamine: {enableHighDopamine}")
-    if enableYouTube is False and enableReddit is False and enableHighDopamine is False and enableHighDopamine is False:
+    if enableYouTube is False and enableMoneySinks is False and enableHighDopamine is False and enableHighDopamine is False:
         return
     command = ""
     if enableYouTube is True:
         command += "~/Scripts/unblock_youtube.sh;"
-    if enableReddit is True:
-        command += "~/Scripts/unblock_reddit.sh;"
+    # if enableReddit is True:
+    #     command += "~/Scripts/unblock_reddit.sh;"
+    if enableMoneySinks is True:
+        command += "~/Scripts/unblock_money_sinks.sh;"
     if enableOther is True:
         command += "~/Scripts/unblock_other.sh;"
     if enableHighDopamine is True:
@@ -78,13 +82,16 @@ def executeActions():
 
 def updateActions(checkBox):
     global enableYouTube
-    global enableReddit
+    # global enableReddit
+    global enableMoneySinks
     global enableHighDopamine
     global enableOther
     if checkBox.text == "Enable YouTube":
         enableYouTube = bool(checkBox.value)
-    elif checkBox.text == "Enable reddit":
-        enableReddit = bool(checkBox.value)
+    # elif checkBox.text == "Enable reddit":
+    #     enableReddit = bool(checkBox.value)
+    elif checkBox.text == "Enable money sinks":
+        enableMoneySinks = bool(checkBox.value)
     elif checkBox.text == "Enable other":
         enableOther = bool(checkBox.value)
     elif checkBox.text == "Enable dopamine sites":
@@ -98,8 +105,11 @@ gridHeight = 0
 app = guizero.App(title="Question Timer", width=380, height=130, layout="grid")
 youtubeCheckbox = guizero.CheckBox(app, text="Enable YouTube", grid=[0, gridHeight], align="left")
 youtubeCheckbox.update_command(updateActions, [youtubeCheckbox])
-redditCheckbox = guizero.CheckBox(app, text="Enable reddit", grid=[1, gridHeight], align="left")
-redditCheckbox.update_command(updateActions, [redditCheckbox])
+# redditCheckbox = guizero.CheckBox(app, text="Enable reddit", grid=[1, gridHeight], align="left")
+# redditCheckbox.update_command(updateActions, [redditCheckbox])
+# gridHeight += 1
+moneySinksCheckbox = guizero.CheckBox(app, text="Enable money sinks", grid=[1, gridHeight], align="left")
+moneySinksCheckbox.update_command(updateActions, [moneySinksCheckbox])
 gridHeight += 1
 otherCheckbox = guizero.CheckBox(app, text="Enable other", grid=[0, gridHeight], align="left")
 otherCheckbox.update_command(updateActions, [otherCheckbox])

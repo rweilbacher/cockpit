@@ -2,19 +2,22 @@ import guizero
 import subprocess
 
 disableYouTube = True
-disableReddit = True
+# disableReddit = True
+disableMoneySinks = True
 disableHighDopamine = True
 disableOther = True
 
 
 def executeActions():
-    if disableYouTube is False and disableReddit is False and disableHighDopamine is False and disableOther is False:
+    if disableYouTube is False and disableMoneySinks is False and disableHighDopamine is False and disableOther is False:
         return
     command = ""
     if disableYouTube is True:
         command += "~/Scripts/block_youtube.sh;"
-    if disableReddit is True:
-        command += "~/Scripts/block_reddit.sh;"
+    # if disableReddit is True:
+    #     command += "~/Scripts/block_reddit.sh;"
+    if disableMoneySinks is True:
+        command += "~/Scripts/block_money_sinks.sh;"
     if disableHighDopamine is True:
         command += "~/Scripts/block_other.sh;"
     if disableOther is True:
@@ -32,13 +35,16 @@ def executeActions():
 
 def updateActions(checkBox):
     global disableYouTube
-    global disableReddit
+    # global disableReddit
+    global disableMoneySinks
     global disableHighDopamine
     global disableOther
     if checkBox.text == "Block YouTube":
         disableYouTube = bool(checkBox.value)
-    elif checkBox.text == "Block reddit":
-        disableReddit = bool(checkBox.value)
+    # elif checkBox.text == "Block reddit":
+    #     disableReddit = bool(checkBox.value)
+    elif checkBox.text == "Block money sinks":
+        disableMoneySinks = bool(checkBox.value)
     elif checkBox.text == "Block other":
         disableHighDopamine = bool(checkBox.value)
     elif checkBox.text == "Block dopamine sites":
@@ -50,9 +56,13 @@ app = guizero.App(title="pihole blocker", width=280, height=100, layout="grid")
 youtubeCheckbox = guizero.CheckBox(app, text="Block YouTube", grid=[0, gridHeight], align="left")
 youtubeCheckbox.update_command(updateActions, [youtubeCheckbox])
 youtubeCheckbox.toggle()
-redditCheckbox = guizero.CheckBox(app, text="Block reddit", grid=[1, gridHeight], align="left")
-redditCheckbox.update_command(updateActions, [redditCheckbox])
-redditCheckbox.toggle()
+# redditCheckbox = guizero.CheckBox(app, text="Block reddit", grid=[1, gridHeight], align="left")
+# redditCheckbox.update_command(updateActions, [redditCheckbox])
+# redditCheckbox.toggle()
+# gridHeight += 1
+moneySinksCheckbox = guizero.CheckBox(app, text="Block money sinks", grid=[1, gridHeight], align="left")
+moneySinksCheckbox.update_command(updateActions, [moneySinksCheckbox])
+moneySinksCheckbox.toggle()
 gridHeight += 1
 otherCheckbox = guizero.CheckBox(app, text="Block other", grid=[0, gridHeight], align="left", )
 otherCheckbox.update_command(updateActions, [otherCheckbox])
