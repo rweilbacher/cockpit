@@ -1,12 +1,16 @@
-# Access to my personal secrets
-from .credentials import instapaper as credentials
 from instapaper import Instapaper as ipaper
 import os
 import datetime
 import json
 
+
+# Access to my personal secrets
+with open("instapaper_credentials.json", "r") as file:
+    credentials = json.loads(file.read())
+    pass
+
+
 # TODO Formatting issues:
-    # Multiline highlights with empty lines inbetween are missing the > signs to keep them in the same box
     # Headings don't get recognized as such
 
 EXPORT_FOLDER_NAME = "Export"
@@ -22,7 +26,6 @@ MARKDOWN_HEADER_TEMPLATE = """**Tags: **
 **Author: **
 **Starred: ** {starred}
 **View date: ** {view_date}
-**Date: **
 
 
 """
@@ -54,7 +57,9 @@ def export_markdown_file(mark, path):
             print("No highlights found!")
         for highlight in highlights:
             file.write(">")
-            file.write(highlight["text"])
+            # Keep quote going over a single empty line. Doesn't account for multiple empty lines
+            text = highlight["text"].replace("\n\n", "\n>\n>")
+            file.write(text)
 
             if highlight["note"] is not None:
                 file.write("\n\n")
@@ -62,8 +67,8 @@ def export_markdown_file(mark, path):
             file.write("\n\n")
 
 
-i = ipaper(credentials.client_id, credentials.client_secret)
-i.login(credentials.username, credentials.password)
+i = ipaper(credentials["client_id"], credentials["client_secret"])
+i.login(credentials["username"], credentials["password"])
 print("Logged in")
 
 folders = i.folders()
