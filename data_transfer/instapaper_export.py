@@ -5,10 +5,14 @@ import os
 import datetime
 import json
 
+# TODO Formatting issues:
+    # Multiline highlights with empty lines inbetween are missing the > signs to keep them in the same box
+    # Headings don't get recognized as such
+
 EXPORT_FOLDER_NAME = "Export"
 EXPORTED_FOLDER_NAME = "Exported"
 
-EXPORT_PATH = "C:\\Users\\Roland\\Google Drive\\knowledge_base\\3 - Resources\\"
+EXPORT_PATH = "C:\\Users\\Roland\\Google Drive\\knowledge_base\\3 - Resources 📖\\"
 
 MARKDOWN_HEADER_TEMPLATE = """**Tags: **
 
@@ -75,9 +79,11 @@ for folder in folders:
 
 if exported_folder_id is None:
     print("ERROR: Couldn't find folder for exported sources!")
+    input()
     exit(-1)
 if export_folder_id is None:
     print("ERROR: Couldn't find folder for sources that should be exported!")
+    input()
     exit(-1)
 
 marks = i.bookmarks(folder=export_folder_id, limit=100)
