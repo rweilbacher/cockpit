@@ -144,7 +144,7 @@ runPythonScript(".\general\daily_template.py", false, 1)
 return
 
 !F9::
-runPythonModule("data_transfer.instapaper_export", true)
+runPythonScript(".\data_transfer\instapaper_export.py", true)
 return
 
 ; Text statistics
