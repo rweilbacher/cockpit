@@ -5,7 +5,7 @@ import time
 from pynput import keyboard
 import subprocess
 
-SECONDS_REQUIRED = "60"
+SECONDS_REQUIRED = "15"
 startTime = 0
 
 enableYouTube = False
@@ -102,7 +102,7 @@ listener = keyboard.Listener(on_press=onPress, on_release=onRelease)
 listener.start()
 
 gridHeight = 0
-app = guizero.App(title="Question Timer", width=380, height=130, layout="grid")
+app = guizero.App(title="Question Timer", width=380, height=110, layout="grid")
 youtubeCheckbox = guizero.CheckBox(app, text="Enable YouTube", grid=[0, gridHeight], align="left")
 youtubeCheckbox.update_command(updateActions, [youtubeCheckbox])
 # redditCheckbox = guizero.CheckBox(app, text="Enable reddit", grid=[1, gridHeight], align="left")
@@ -117,16 +117,16 @@ highDopamineCheckbox = guizero.CheckBox(app, text="Enable dopamine sites", grid=
 highDopamineCheckbox.update_command(updateActions, [highDopamineCheckbox])
 gridHeight += 1
 timeRequiredLabel = guizero.Text(app, text="Time Required", grid=[0, gridHeight], align="left")
-timeRequired = guizero.TextBox(app, text=SECONDS_REQUIRED, grid=[1, gridHeight], width=3, align="left")
+timeRequired = guizero.TextBox(app, text=SECONDS_REQUIRED, grid=[1, gridHeight], width=3, align="left", enabled=False)
 gridHeight += 1
-questionLabel = guizero.Text(app, text="Reason", grid=[0, gridHeight], align="left")
-question = guizero.TextBox(app, text="", grid=[1, gridHeight], width=40, align="left")
-gridHeight += 1
+# questionLabel = guizero.Text(app, text="Reason", grid=[0, gridHeight], align="left")
+# question = guizero.TextBox(app, text="", grid=[1, gridHeight], width=40, align="left")
+# gridHeight += 1
 timeRemainingLabel = guizero.Text(app, text=SECONDS_REQUIRED, grid=[1, gridHeight])
 gridHeight += 1
 
-question.focus()
-question.when_key_pressed = disable
+# question.focus()
+# question.when_key_pressed = disable
 
 timeRemainingLabel.repeat(100, updateLabel, [timeRemainingLabel, timeRequired])
 app.display()
