@@ -58,12 +58,22 @@ def export_markdown_file(mark, path):
         for highlight in highlights:
             file.write(">")
             # Keep quote going over a single empty line. Doesn't account for multiple empty lines
-            text = highlight["text"].replace("\n\n", "\n>\n>")
-            file.write(text)
+            highlight_text = highlight["text"].replace("\n\n", "\n>\n>")
 
-            if highlight["note"] is not None:
+            note = highlight["note"]
+
+            if note is not None and note == "h":
+                file.write("# " + highlight_text)
+                note = note[1:]
+            elif note is not None and note.startswith("h "):
+                file.write("# " + highlight_text)
+                note = note[2:]
+            else:
+                file.write(highlight_text)
+
+            if note is not None and note is not "":
                 file.write("\n\n")
-                file.write("*{}*".format(highlight["note"]))
+                file.write("*{}*".format(note))
             file.write("\n\n")
 
 
