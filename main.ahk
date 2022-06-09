@@ -12,8 +12,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; ::hw::Hello World = Text expansion
 ; $ prefix disables activation of the hotkey by its own Send commands
 
-; global variable to enable and disable custom Evernote hotkeys, since they might clash with other applications
-global enableEvernote = false
+global youtubeTranscriptPasterEnabled = false
 
 global alternative_umlauts = false
 
@@ -361,6 +360,24 @@ ClipWait, 2
 SendInput ^v
 return
 
+$^v::
+runPythonScript(".\obsidian\youtube-transcript-formatter.py", false)
+SendInput ^v
+return
+
+!F12::
+if (youtubeTranscriptPasterEnabled = true) {
+    global youtubeTranscriptPasterEnabled = false
+	TrayTip, YouTube Transcript Paster, off
+	Hotkey, ^v, Off
+}
+else {
+    global youtubeTranscriptPasterEnabled = true
+	TrayTip, YouTube Transcript Paster, on
+	Hotkey, ^v, On
+}
+return
+
 
 ; --- Evernote Utils ---
 
@@ -387,17 +404,6 @@ SendInput ^v
 Sleep 50
 Clipboard := ClipBackup
 }
-
-!F12::
-if (enableEvernote = true) {
-    global enableEvernote = false
-	TrayTip, Evernote Hotkeys, off
-}
-else {
-    global enableEvernote = true
-	TrayTip, Evernote Hotkeys, on
-}
-return
 
 $^0::
 if (enableEvernote = false) {
