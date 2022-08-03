@@ -13,6 +13,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; $ prefix disables activation of the hotkey by its own Send commands
 
 global youtubeTranscriptPasterEnabled = false
+Hotkey, ^v, Off
 
 global alternative_umlauts = false
 
