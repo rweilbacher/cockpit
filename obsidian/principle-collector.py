@@ -40,6 +40,15 @@ def find_principles(path):
     return principles
 
 
+# TODO Separate scenarios like below into multiple principles
+"""
+- [[principles]] Invite calmness/relaxation/dropping resistance. Intend to release tension. Intend to unclench your soul
+- [[principles]] Be fully aware and awake to the experience of feeling unmotivated. Accept it and intend to let go of wanting it to be different
+- [[principles]] Be fully aware of your sense of motivation, enjoyment and wanting of the soul. "Am I doing this to distract myself from my existence or am I enjoying it on some level?". "If the things I *need* (or I imagine I need) to do are not on the menu of my soul, what is?"
+- [[principles]] Don't fall into imaginary commitment traps. Just because I started to watch a YouTube video doesn't mean I need to finish it if I don't enjoy it. Just because I started a match doesn't mean I need to finish it. Just because I have been scrolling endless feeds for 15min doesn't mean I need to continue doing it. You can get fed up with something
+- [[principles]] Let go of things you think you *need* to do. 
+"""
+
 def analyze_file(source, path):
     with open(path, "r", encoding="utf-8") as file:
         content = file.read()
@@ -82,5 +91,6 @@ with open("all_principles.md", "w", encoding="utf-8") as markdown_file, open("al
     print(f"Number of principles: {len(principles)}")
     for principle in principles:
         markdown_file.write(f"{principle}\n\n")
-    json_file.write(jsonpickle.encode(principles, make_refs=False, unpicklable=False, indent=1))
+    # json_file.write(jsonpickle.encode(principles, make_refs=False, unpicklable=False, indent=1))
+    json_file.write(jsonpickle.encode(principles, indent=1))
 
