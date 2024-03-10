@@ -507,4 +507,6 @@ return
 ::urose::purpose
 ::andre::andré
 ::bjoern::björn
+::phenom::phenomenological
+::phenomy::phenomenology
 
