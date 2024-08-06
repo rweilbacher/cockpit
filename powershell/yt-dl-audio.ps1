@@ -1,0 +1,1 @@
+yt-dlp -f "bestaudio/best" -ciw --extract-audio --yes-playlist --ignore-errors -v -o "%(title)s.%(ext)s" $args[1]
