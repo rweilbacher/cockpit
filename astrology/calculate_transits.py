@@ -1,12 +1,15 @@
 import swisseph as swe
 from datetime import datetime, date, timedelta
 from dataclasses import dataclass
+from icalendar import Calendar, Event
 
-# TODO sorting (planet, sign, type, orb)
-# TODO make signs optional
+# TODO figure out the remaining extra aspects that show up in my list
+# TODO improve applying calculation
+# TODO choose better orb limits
+
 # TODO add imaginary elements like mid heaven and ascendant
-# TODO add calculation of date ranges for transits
-# TODO create .ics file out of those date ranges
+# TODO make signs optional
+# TODO sorting (planet, sign, type, orb)
 
 ORB_RANGE = 5
 
@@ -24,19 +27,51 @@ ASPECTS = {
     0: 'conjunct', 60: 'sextile', 90: 'square', 120: 'trine', 180: 'opposite'
 }
 
+PLANET_SYMBOLS = {
+    'Sun': '☉',
+    'Moon': '☽',
+    'Mercury': '☿',
+    'Venus': '♀',
+    'Mars': '♂',
+    'Jupiter': '♃',
+    'Saturn': '♄',
+    'Uranus': '♅',
+    'Neptune': '♆',
+    'Pluto': '♇'
+}
+
+ASPECT_SYMBOLS = {
+    'conjunct': '☌',
+    'sextile': '⚹',
+    'square': '□',
+    'trine': '△',
+    'opposite': '☍'
+}
+
 
 @dataclass
 class TransitAspect:
-    trans_planet: str
-    trans_sign: str
-    aspect_type: str
     natal_planet: str
     natal_sign: str
+    aspect_type: str
+    trans_planet: str
+    trans_sign: str
     orb: float
     applying: bool
 
     def __str__(self):
-        return f"({self.trans_sign}) {self.trans_planet} {self.aspect_type} {self.natal_planet} ({self.natal_sign}) | {'+' if self.orb > 0 else ''}{self.orb:.2f}°’{'A' if self.applying else 'S'}"
+        return f"({self.natal_sign}) {self.natal_planet} {self.aspect_type} {self.trans_planet} ({self.trans_sign}) | {'+' if self.orb > 0 else ''}{self.orb:.2f}°'{'A' if self.applying else 'S'}"
+
+
+@dataclass
+class Transit:
+    natal_planet: str
+    natal_sign: str
+    aspect_type: str
+    trans_planet: str
+    trans_sign: str
+    start_date: date
+    end_date: date = None
 
 
 class SwissEphWrapper:
@@ -58,13 +93,13 @@ class SwissEphWrapper:
             lon = result[0]
             sign = SIGNS[int(lon / 30)]
             degree = lon % 30
-            return PlanetInfo(planet, sign, degree)
+            return PlanetInfo(planet, sign, degree, lon)
         except Exception as e:
             print(f"Error calculating position for {planet} at JD {jd}: {str(e)}")
             raise
 
     def aspect(self, planet1, planet2, orb=ORB_RANGE):
-        angle = (planet2.longitude - planet1.longitude + 180) % 360 - 180
+        angle = abs((planet2.longitude - planet1.longitude + 180) % 360 - 180)
         for asp_angle, asp_type in ASPECTS.items():
             if abs(angle - asp_angle) <= orb:
                 return AspectInfo(asp_type, angle - asp_angle, angle < asp_angle)
@@ -75,15 +110,18 @@ class SwissEphWrapper:
 
 
 class PlanetInfo:
-    def __init__(self, name, sign, degree):
+    def __init__(self, name, sign, degree, longitude):
         self.name = name
         self.sign = sign
         self.degree = degree
-        self.longitude = (SIGNS.index(sign) * 30) + degree
+        self.longitude = longitude
 
     @property
     def lon(self):
         return self.longitude
+
+    def __str__(self):
+        return f"{self.name} in {self.sign} at {self.degree}"
 
 
 class AspectInfo:
@@ -117,21 +155,93 @@ def calculate_daily_aspects_and_signs(start_date, end_date, birth_data):
 
         # Calculate aspects
         aspects = []
-        for trans_planet in PLANETS:
-            for natal_planet in PLANETS:
-                trans_obj = transit_chart.get(trans_planet)
+        for natal_planet in PLANETS:
+            if natal_planet == "Moon":
+                # Skip the moon as natal planet because it moves too fast to be considered on a full day basis
+                continue
+            for trans_planet in PLANETS:
                 natal_obj = birth_chart.get(natal_planet)
-                aspect = wrapper.aspect(trans_obj, natal_obj)
+                trans_obj = transit_chart.get(trans_planet)
+                aspect = wrapper.aspect(natal_obj, trans_obj)
                 if aspect:
                     aspects.append(TransitAspect(
-                        trans_planet, trans_obj.sign, aspect.type,
-                        natal_planet, natal_obj.sign, aspect.orb, aspect.applying
+                        natal_planet, natal_obj.sign, aspect.type,
+                        trans_planet, trans_obj.sign, aspect.orb, aspect.applying
                     ))
 
         daily_aspects.append((current_date, aspects))
         current_date += timedelta(days=1)
     wrapper.close()
     return daily_aspects
+
+
+def calculate_transits(start_date, end_date, birth_data):
+    birth_datetime, lat, lon = birth_data
+    birth_chart = Chart(birth_datetime, lat, lon)
+    wrapper = SwissEphWrapper()
+
+    active_transits = {}
+    completed_transits = []
+
+    current_date = start_date
+    while current_date <= end_date:
+        transit_chart = Chart(datetime.combine(current_date, datetime.min.time()), lat, lon)
+
+        # Check all active transits first
+        for transit_key in list(active_transits.keys()):
+            natal_planet, trans_planet = transit_key
+            natal_obj = birth_chart.get(natal_planet)
+            trans_obj = transit_chart.get(trans_planet)
+            aspect = wrapper.aspect(natal_obj, trans_obj)
+
+            if not aspect:
+                transit = active_transits.pop(transit_key)
+                transit.end_date = current_date - timedelta(days=1)
+                completed_transits.append(transit)
+
+        # Now check for new transits
+        for natal_planet in PLANETS:
+            if natal_planet == "Moon":
+                # Skip the moon as natal planet because it moves too fast to be considered on a full day basis
+                continue
+            for trans_planet in PLANETS:
+                if (natal_planet, trans_planet) not in active_transits:
+                    natal_obj = birth_chart.get(natal_planet)
+                    trans_obj = transit_chart.get(trans_planet)
+                    aspect = wrapper.aspect(natal_obj, trans_obj)
+
+                    if aspect:
+                        active_transits[(natal_planet, trans_planet)] = Transit(
+                            natal_planet, natal_obj.sign, aspect.type,
+                            trans_planet, trans_obj.sign, current_date
+                        )
+
+        current_date += timedelta(days=1)
+
+    # Handle any remaining active transits
+    for transit in active_transits.values():
+        transit.end_date = end_date
+        completed_transits.append(transit)
+
+    wrapper.close()
+    return completed_transits
+
+
+def create_ics_file(transits, output_file):
+    cal = Calendar()
+    cal.add('prodid', '-//Astrological Transits//EN')
+    cal.add('version', '2.0')
+
+    for transit in transits:
+        event = Event()
+        event.add('summary', f"{PLANET_SYMBOLS[transit.natal_planet]} {ASPECT_SYMBOLS[transit.aspect_type]} {PLANET_SYMBOLS[transit.trans_planet]}")
+        event.add('dtstart', transit.start_date)
+        event.add('dtend', transit.end_date + timedelta(days=1))  # Add one day to make it inclusive
+        event.add('description', f"Natal {transit.natal_planet} in {transit.natal_sign} {transit.aspect_type} {transit.trans_planet} in {transit.trans_sign}")
+        cal.add_component(event)
+
+    with open(output_file, 'wb') as f:
+        f.write(cal.to_ical())
 
 
 def print_aligned_transits(day, aspects):
@@ -142,13 +252,13 @@ def print_aligned_transits(day, aspects):
         return
 
     # Find the maximum length of the aspect descriptions
-    max_length = max(len(f"({aspect.trans_sign}) {aspect.trans_planet} {aspect.aspect_type} {aspect.natal_planet} ({aspect.natal_sign})") for aspect in aspects)
+    max_length = max(len(f"({aspect.natal_sign}) {aspect.natal_planet} {aspect.aspect_type} {aspect.trans_planet} ({aspect.trans_sign})") for aspect in aspects)
 
     print(f"### {day}")
     for aspect in aspects:
-        aspect_desc = f"({aspect.trans_sign}) {aspect.trans_planet} {aspect.aspect_type} {aspect.natal_planet} ({aspect.natal_sign})"
+        aspect_desc = f"({aspect.natal_sign}) {aspect.natal_planet} {aspect.aspect_type} {aspect.trans_planet} ({aspect.trans_sign})"
         padding = " " * (max_length - len(aspect_desc))
-        print(f"{aspect_desc}{padding} | {'+' if aspect.orb > 0 else ''}{aspect.orb:.2f}°’{'A' if aspect.applying else 'S'}")
+        print(f"{aspect_desc}{padding} | {'+' if aspect.orb > 0 else ''}{aspect.orb:.2f}°'{'A' if aspect.applying else 'S'}")
     print()
 
 
@@ -164,3 +274,6 @@ with open("birthdata.txt", "r") as file:
     daily_aspects = calculate_daily_aspects_and_signs(start_date, end_date, birth_data)
     for day, aspects in daily_aspects:
         print_aligned_transits(day, aspects)
+    transits = calculate_transits(start_date, end_date, birth_data)
+    create_ics_file(transits, "./astro_calendar_test.ics")
+
