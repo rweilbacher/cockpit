@@ -3,15 +3,15 @@ from datetime import datetime, date, timedelta, time
 from dataclasses import dataclass, field
 from icalendar import Calendar, Event
 
-# TODO figure out the remaining extra aspects that show up in my list
-# TODO improve applying calculation
-# TODO choose better orb limits
+# TODO add calculations for a single day also involving moon etc.
+# TODO improve applying calculation (or not. seems like kind of a pain in the ass)
+# TODO choose better orb limits (or not. seems mostly fine)
 
 # TODO add imaginary elements like mid heaven and ascendant
 # TODO make signs optional
 # TODO sorting (planet, sign, type, orb)
 
-ORB_RANGE = 5
+ORB_RANGE = 6
 
 SIGNS = [
     'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
@@ -79,8 +79,15 @@ class SwissEphWrapper:
     def __init__(self, ephe_path='./ephemeris'):
         swe.set_ephe_path(ephe_path)
 
-    def _to_jd(self, date):
-        return swe.julday(date.year, date.month, date.day, date.hour + date.minute / 60)
+    def _to_jd(self, date_or_datetime):
+        if isinstance(date_or_datetime, date) and not isinstance(date_or_datetime, datetime):
+            date_or_datetime = datetime.combine(date_or_datetime, time())
+        return swe.julday(date_or_datetime.year, date_or_datetime.month, date_or_datetime.day,
+                          date_or_datetime.hour + date_or_datetime.minute / 60)
+
+    def get_planet_position(self, date_or_datetime, planet):
+        jd = self._to_jd(date_or_datetime)
+        return self.get_planet(jd, planet)
 
     def get_planet(self, jd, planet):
         try:
@@ -161,6 +168,8 @@ def calculate_daily_aspects_and_signs(start_date, end_date, birth_data):
                 # Skip the moon as natal planet because it moves too fast to be considered on a full day basis
                 continue
             for trans_planet in PLANETS:
+                if trans_planet == "Moon":
+                    continue
                 natal_obj = birth_chart.get(natal_planet)
                 trans_obj = transit_chart.get(trans_planet)
                 aspect = wrapper.aspect(natal_obj, trans_obj)
@@ -208,6 +217,8 @@ def calculate_transits(start_date, end_date, birth_data):
             if natal_planet == "Moon":
                 continue
             for trans_planet in PLANETS:
+                if trans_planet == "Moon":
+                    continue
                 if (natal_planet, trans_planet) not in active_transits:
                     natal_obj = birth_chart.get(natal_planet)
                     trans_obj = transit_chart.get(trans_planet)
@@ -244,7 +255,7 @@ def create_ics_file(transits, output_file):
             # Create a unique UID for each day
             event.add('uid', f"{transit.natal_planet}_{transit.trans_planet}_{transit.aspect_type}_{day}")
             # Use the provided summary format with a sequence number prefix
-            event.add('summary', f"{PLANET_SYMBOLS[transit.natal_planet]} {ASPECT_SYMBOLS[transit.aspect_type]} {PLANET_SYMBOLS[transit.trans_planet]} {'+' if orb > 0 else ''}{orb:.2f}°'{'A' if applying else 'S'} ({i}/{total_days})")
+            event.add('summary', f"{PLANET_SYMBOLS[transit.natal_planet]} {ASPECT_SYMBOLS[transit.aspect_type]} {PLANET_SYMBOLS[transit.trans_planet]} {'+' if orb > 0 else ''}{orb:.2f}°{'A' if applying else 'S'} ({i}/{total_days})")
             event.add('dtstart', day)
             event.add('dtend', day + timedelta(days=1))
             event.add('description', f"Natal {transit.natal_planet} in {transit.natal_sign} {transit.aspect_type} {transit.trans_planet} in {transit.trans_sign}")
@@ -280,7 +291,7 @@ with open("birthdata.txt", "r") as file:
     lon = float(raw_data[2])
     birth_data = (birth_datetime, lat, lon)
     start_date = date(2024, 8, 6)
-    end_date = date(2024, 8, 31)
+    end_date = date(2024, 9, 30)
     daily_aspects = calculate_daily_aspects_and_signs(start_date, end_date, birth_data)
     for day, aspects in daily_aspects:
         print_aligned_transits(day, aspects)
