@@ -1,6 +1,6 @@
 import swisseph as swe
-from datetime import datetime, date, timedelta
-from dataclasses import dataclass
+from datetime import datetime, date, timedelta, time
+from dataclasses import dataclass, field
 from icalendar import Calendar, Event
 
 # TODO figure out the remaining extra aspects that show up in my list
@@ -72,6 +72,7 @@ class Transit:
     trans_sign: str
     start_date: date
     end_date: date = None
+    daily_orbs: dict = field(default_factory=dict)
 
 
 class SwissEphWrapper:
@@ -194,7 +195,10 @@ def calculate_transits(start_date, end_date, birth_data):
             trans_obj = transit_chart.get(trans_planet)
             aspect = wrapper.aspect(natal_obj, trans_obj)
 
-            if not aspect:
+            if aspect:
+                transit = active_transits[transit_key]
+                transit.daily_orbs[current_date] = (aspect.orb, aspect.applying)
+            else:
                 transit = active_transits.pop(transit_key)
                 transit.end_date = current_date - timedelta(days=1)
                 completed_transits.append(transit)
@@ -202,7 +206,6 @@ def calculate_transits(start_date, end_date, birth_data):
         # Now check for new transits
         for natal_planet in PLANETS:
             if natal_planet == "Moon":
-                # Skip the moon as natal planet because it moves too fast to be considered on a full day basis
                 continue
             for trans_planet in PLANETS:
                 if (natal_planet, trans_planet) not in active_transits:
@@ -211,10 +214,12 @@ def calculate_transits(start_date, end_date, birth_data):
                     aspect = wrapper.aspect(natal_obj, trans_obj)
 
                     if aspect:
-                        active_transits[(natal_planet, trans_planet)] = Transit(
+                        transit = Transit(
                             natal_planet, natal_obj.sign, aspect.type,
                             trans_planet, trans_obj.sign, current_date
                         )
+                        transit.daily_orbs[current_date] = (aspect.orb, aspect.applying)
+                        active_transits[(natal_planet, trans_planet)] = transit
 
         current_date += timedelta(days=1)
 
@@ -233,12 +238,17 @@ def create_ics_file(transits, output_file):
     cal.add('version', '2.0')
 
     for transit in transits:
-        event = Event()
-        event.add('summary', f"{PLANET_SYMBOLS[transit.natal_planet]} {ASPECT_SYMBOLS[transit.aspect_type]} {PLANET_SYMBOLS[transit.trans_planet]}")
-        event.add('dtstart', transit.start_date)
-        event.add('dtend', transit.end_date + timedelta(days=1))  # Add one day to make it inclusive
-        event.add('description', f"Natal {transit.natal_planet} in {transit.natal_sign} {transit.aspect_type} {transit.trans_planet} in {transit.trans_sign}")
-        cal.add_component(event)
+        total_days = len(transit.daily_orbs)
+        for i, (day, (orb, applying)) in enumerate(sorted(transit.daily_orbs.items()), 1):
+            event = Event()
+            # Create a unique UID for each day
+            event.add('uid', f"{transit.natal_planet}_{transit.trans_planet}_{transit.aspect_type}_{day}")
+            # Use the provided summary format with a sequence number prefix
+            event.add('summary', f"{PLANET_SYMBOLS[transit.natal_planet]} {ASPECT_SYMBOLS[transit.aspect_type]} {PLANET_SYMBOLS[transit.trans_planet]} {'+' if orb > 0 else ''}{orb:.2f}°'{'A' if applying else 'S'} ({i}/{total_days})")
+            event.add('dtstart', day)
+            event.add('dtend', day + timedelta(days=1))
+            event.add('description', f"Natal {transit.natal_planet} in {transit.natal_sign} {transit.aspect_type} {transit.trans_planet} in {transit.trans_sign}")
+            cal.add_component(event)
 
     with open(output_file, 'wb') as f:
         f.write(cal.to_ical())
