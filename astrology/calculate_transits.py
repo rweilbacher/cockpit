@@ -2,8 +2,11 @@ import swisseph as swe
 from datetime import datetime, date, timedelta, time
 from dataclasses import dataclass, field
 from icalendar import Calendar, Event
+from datetime import datetime, timedelta
+from collections import defaultdict
 
 # TODO add calculations for a single day also involving moon etc.
+# TODO print into text file
 # TODO improve applying calculation (or not. seems like kind of a pain in the ass)
 # TODO choose better orb limits (or not. seems mostly fine)
 
@@ -25,6 +28,24 @@ PLANETS = {
 
 ASPECTS = {
     0: 'conjunct', 60: 'sextile', 90: 'square', 120: 'trine', 180: 'opposite'
+}
+
+# Add this near the top of your file, after the other global configurations
+ASPECT_WEIGHTS = {
+    'exactness': 0.30,
+    'planet_nature': 0.25,
+    'aspect_nature': 0.20,
+}
+
+# Planet importance weights (personal planets weighted higher)
+PLANET_WEIGHTS = {
+    'Sun': 1.0, 'Moon': 1.0, 'Mercury': 0.9, 'Venus': 0.9, 'Mars': 0.9,
+    'Jupiter': 0.8, 'Saturn': 0.8, 'Uranus': 0.7, 'Neptune': 0.7, 'Pluto': 0.7
+}
+
+# Aspect importance weights
+ASPECT_TYPE_WEIGHTS = {
+    'conjunct': 1.0, 'opposite': 0.9, 'trine': 0.8, 'square': 0.8, 'sextile': 0.7
 }
 
 PLANET_SYMBOLS = {
@@ -151,6 +172,20 @@ class Chart:
         return self.wrapper.get_planet(self.jd, planet)
 
 
+def calculate_aspect_weight(aspect):
+    # We'll use the absolute orb value directly, giving higher weight to smaller orbs
+    exactness_weight = 1 - (abs(aspect.orb) / ORB_RANGE)
+    planet_weight = (PLANET_WEIGHTS[aspect.natal_planet] + PLANET_WEIGHTS[aspect.trans_planet]) / 2
+    aspect_type_weight = ASPECT_TYPE_WEIGHTS[aspect.aspect_type]
+
+    total_weight = (
+        ASPECT_WEIGHTS['exactness'] * exactness_weight +
+        ASPECT_WEIGHTS['planet_nature'] * planet_weight +
+        ASPECT_WEIGHTS['aspect_nature'] * aspect_type_weight
+    )
+    return total_weight
+
+
 def calculate_daily_aspects_and_signs(start_date, end_date, birth_data):
     birth_datetime, lat, lon = birth_data
     birth_chart = Chart(birth_datetime, lat, lon)
@@ -248,17 +283,53 @@ def create_ics_file(transits, output_file):
     cal.add('prodid', '-//Astrological Transits//EN')
     cal.add('version', '2.0')
 
+    # Create a unique identifier for each transit
+    transit_ids = {id(transit): i for i, transit in enumerate(transits)}
+
+    # Pre-calculate total days for each transit
+    transit_total_days = {transit_ids[id(transit)]: len(transit.daily_orbs) for transit in transits}
+
+    # Collect all events for all days
+    all_events = []
+    transit_day_counters = defaultdict(int)
     for transit in transits:
-        total_days = len(transit.daily_orbs)
-        for i, (day, (orb, applying)) in enumerate(sorted(transit.daily_orbs.items()), 1):
+        transit_id = transit_ids[id(transit)]
+        for day in sorted(transit.daily_orbs.keys()):
+            orb, applying = transit.daily_orbs[day]
+            transit_day_counters[transit_id] += 1
+            aspect = TransitAspect(
+                transit.natal_planet, transit.natal_sign, transit.aspect_type,
+                transit.trans_planet, transit.trans_sign, orb, applying
+            )
+            weight = calculate_aspect_weight(aspect)
+            all_events.append((day, transit, orb, applying, weight, transit_day_counters[transit_id]))
+
+    # Sort all events by date and then by weight
+    all_events.sort(key=lambda x: (x[0], -x[4]))
+
+    # Group events by date
+    from itertools import groupby
+    from operator import itemgetter
+
+    for day, day_events in groupby(all_events, key=itemgetter(0)):
+        day_events = list(day_events)
+
+        for i, (_, transit, orb, applying, _, current_day) in enumerate(day_events, 1):
             event = Event()
-            # Create a unique UID for each day
-            event.add('uid', f"{transit.natal_planet}_{transit.trans_planet}_{transit.aspect_type}_{day}")
-            # Use the provided summary format with a sequence number prefix
-            event.add('summary', f"{PLANET_SYMBOLS[transit.natal_planet]} {ASPECT_SYMBOLS[transit.aspect_type]} {PLANET_SYMBOLS[transit.trans_planet]} {'+' if orb > 0 else ''}{orb:.2f}°{'A' if applying else 'S'} ({i}/{total_days})")
-            event.add('dtstart', day)
-            event.add('dtend', day + timedelta(days=1))
-            event.add('description', f"Natal {transit.natal_planet} in {transit.natal_sign} {transit.aspect_type} {transit.trans_planet} in {transit.trans_sign}")
+            event.add('uid', f"{transit.natal_planet}_{transit.trans_planet}_{transit.aspect_type}_{day}_{i}")
+
+            # Adjust start time to force order
+            start_time = datetime.combine(day, datetime.min.time()) + timedelta(minutes=i - 1)
+            end_time = start_time + timedelta(minutes=1)
+
+            event.add('dtstart', start_time)
+            event.add('dtend', end_time)
+
+            transit_id = transit_ids[id(transit)]
+            summary = f"{PLANET_SYMBOLS[transit.natal_planet]} {ASPECT_SYMBOLS[transit.aspect_type]} {PLANET_SYMBOLS[transit.trans_planet]} {'+' if orb > 0 else ''}{orb:.2f}°{'A' if applying else 'S'} ({current_day}/{transit_total_days[transit_id]})"
+            event.add('summary', summary)
+            event.add('description',
+                      f"Natal {transit.natal_planet} in {transit.natal_sign} {transit.aspect_type} {transit.trans_planet} in {transit.trans_sign}")
             cal.add_component(event)
 
     with open(output_file, 'wb') as f:
@@ -272,11 +343,13 @@ def print_aligned_transits(day, aspects):
         print()
         return
 
-    # Find the maximum length of the aspect descriptions
-    max_length = max(len(f"({aspect.natal_sign}) {aspect.natal_planet} {aspect.aspect_type} {aspect.trans_planet} ({aspect.trans_sign})") for aspect in aspects)
+    # Sort aspects by weight
+    sorted_aspects = sorted(aspects, key=calculate_aspect_weight, reverse=True)
+
+    max_length = max(len(f"({aspect.natal_sign}) {aspect.natal_planet} {aspect.aspect_type} {aspect.trans_planet} ({aspect.trans_sign})") for aspect in sorted_aspects)
 
     print(f"### {day}")
-    for aspect in aspects:
+    for aspect in sorted_aspects:
         aspect_desc = f"({aspect.natal_sign}) {aspect.natal_planet} {aspect.aspect_type} {aspect.trans_planet} ({aspect.trans_sign})"
         padding = " " * (max_length - len(aspect_desc))
         print(f"{aspect_desc}{padding} | {'+' if aspect.orb > 0 else ''}{aspect.orb:.2f}°'{'A' if aspect.applying else 'S'}")
