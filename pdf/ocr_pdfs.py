@@ -6,6 +6,7 @@ import logging
 import re
 import cv2
 import numpy as np
+from . import extract_highlights
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -108,13 +109,13 @@ def process_file(file_path, output_dir):
         # Process the OCR text
         processed_text = process_text(ocr_text)
 
-        # Save processed OCR text
-        txt_filename = f"{base_name}_OCR.txt"
-        txt_path = os.path.join(output_dir, txt_filename)
-        with open(txt_path, 'w', encoding='utf-8') as txt_file:
-            txt_file.write(processed_text)
+        # Save processed OCR text as markdown file
+        md_filename = f"{base_name}_OCR.md"
+        md_path = os.path.join(output_dir, md_filename)
+        with open(md_path, 'w', encoding='utf-8') as md_file:
+            md_file.write(processed_text)
 
-        logging.info(f"Created processed OCR text for {filename}: {txt_path}")
+        logging.info(f"Created processed OCR text for {filename}: {md_path}")
 
     except Exception as e:
         logging.error(f"Error processing {filename}: {e}")
