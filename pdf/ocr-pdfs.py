@@ -4,6 +4,8 @@ from pdf2image import convert_from_path
 from PIL import Image
 import logging
 import re
+import cv2
+import numpy as np
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -12,9 +14,45 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 poppler_path = None  # Set this to the Poppler path if it's not in your system PATH
 
 
+def preprocess_image(image):
+    # Convert PIL Image to OpenCV format
+    img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+
+    # Convert to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # Apply adaptive thresholding
+    thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+
+    # Denoise
+    denoised = cv2.fastNlMeansDenoising(thresh, None, 10, 7, 21)
+
+    # Deskew
+    coords = np.column_stack(np.where(denoised > 0))
+    angle = cv2.minAreaRect(coords)[-1]
+    if angle < -45:
+        angle = -(90 + angle)
+    else:
+        angle = -angle
+    (h, w) = img.shape[:2]
+    center = (w // 2, h // 2)
+    M = cv2.getRotationMatrix2D(center, angle, 1.0)
+    rotated = cv2.warpAffine(denoised, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+
+    # Convert back to PIL Image
+    return Image.fromarray(rotated)
+
+
 def ocr_image(image):
     try:
-        text = pytesseract.image_to_string(image)
+        # Preprocess the image
+        processed_image = preprocess_image(image)
+
+        # Configure Tesseract
+        custom_config = r'--oem 3 --psm 1 -c preserve_interword_spaces=1'
+
+        # Perform OCR
+        text = pytesseract.image_to_string(processed_image, config=custom_config)
         return text
     except pytesseract.TesseractError as e:
         logging.error(f"Tesseract error: {e}")
@@ -33,6 +71,9 @@ def process_text(text):
 
     # Ensure paragraphs are separated by double newlines
     text = re.sub(r'\n{2,}', '\n\n', text)
+
+    # Reformat words that were split across lines
+    text = re.sub(r'(\w+)-\s\n(\w+)', r'\1\2', text)
 
     return text.strip()
 
