@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 PDF_PATH = "./annotated.pdf"
 OUTPUT_FOLDER = "./output"
 
+# Minimum size for highlighted areas (in pixels)
+MIN_HIGHLIGHT_AREA = 100  # Adjust this value as needed
+
 
 def ensure_output_folder():
     if not os.path.exists(OUTPUT_FOLDER):
@@ -48,17 +51,22 @@ def extract_highlights(images: List[np.ndarray], color_ranges: Dict[str, Tuple[n
                 mask = cv2.inRange(hsv, lower, upper)
                 contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 for i, contour in enumerate(contours):
+                    area = cv2.contourArea(contour)
+                    if area < MIN_HIGHLIGHT_AREA:
+                        continue  # Skip this contour if it's too small
+
                     x, y, w, h = cv2.boundingRect(contour)
                     highlighted_area = {
                         'color': color,
                         'page': page_num + 1,
                         'bbox': (x, y, x + w, y + h),
-                        'image': img[y:y + h, x:x + w]
+                        'image': img[y:y + h, x:x + w],
+                        'area': area
                     }
                     highlighted_areas.append(highlighted_area)
 
                     # Save the highlighted area as a PNG image
-                    image_filename = f"highlight_page{page_num + 1}_{color}_{i + 1}.png"
+                    image_filename = f"highlight_page{page_num + 1}_{color}_{i + 1}_area{int(area)}.png"
                     image_path = os.path.join(OUTPUT_FOLDER, image_filename)
                     cv2.imwrite(image_path, cv2.cvtColor(highlighted_area['image'], cv2.COLOR_RGB2BGR))
                     logger.info(f"Saved highlighted area: {image_filename}")
@@ -76,10 +84,20 @@ def main() -> List[Dict]:
         images = pdf_to_images(PDF_PATH)
 
         # Define color ranges in HSV
-        color_ranges = {
-            'yellow': (np.array([20, 100, 100]), np.array([30, 255, 255])),
-            'red': (np.array([0, 100, 100]), np.array([10, 255, 255])),
-            'green': (np.array([40, 100, 100]), np.array([80, 255, 255]))
+        '''RGB color values of Notability highlights (some leeway required)
+        green single 219, 255, 158
+        green double 198, 255, 101
+        yellow single 255, 255, 149
+        yellow double 255, 255, 87
+        red single 247, 171, 163
+        red double 242, 122, 110
+        purple single 255, 149, 237
+        purple double 255,87, 226'''
+        color_ranges = { 
+            'yellow': (np.array([28, 80, 200]), np.array([32, 255, 255])),
+            'green': (np.array([64, 95, 200]), np.array([68, 255, 255])),
+            'red': (np.array([0, 95, 200]), np.array([6, 255, 255])),
+            'purple': (np.array([150, 80, 200]), np.array([159, 255, 255]))
         }
 
         highlighted_areas = extract_highlights(images, color_ranges)
@@ -95,4 +113,5 @@ if __name__ == "__main__":
 
     # Example of using the results
     for area in highlighted_areas:
-        logger.info(f"Found {area['color']} highlight on page {area['page']} at position {area['bbox']}")
+        logger.info(
+            f"Found {area['color']} highlight on page {area['page']} at position {area['bbox']} with area {area['area']}")
