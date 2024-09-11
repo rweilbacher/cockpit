@@ -72,10 +72,10 @@ def extract_highlights(annotated_img: Image.Image, page_num: int, output_folder:
                 if DEBUG:
                     # Draw bounding box on the full image for visualization
                     cv2.rectangle(annotated_img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                    with open(os.path.join(output_folder, f"highlight_page{page_num + 1}_{color}_{i + 1}.txt")) as file:
-                        file.write(highlight["text"])
+                    with open(os.path.join(output_folder, f"highlight_page{page_num + 1}_{color}_{i + 1}.md"), "w") as file:
+                        file.write(highlighted_area["text"])
 
-        if DEBUG:
+        if DEBUG and len(highlighted_areas) > 0:
             # Save the image with bounding boxes
             cv2.imwrite(os.path.join(output_folder, f"page{page_num + 1}_with_boxes.png"),
                         cv2.cvtColor(annotated_img, cv2.COLOR_RGB2BGR))

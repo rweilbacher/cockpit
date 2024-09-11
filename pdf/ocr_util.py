@@ -28,43 +28,47 @@ def ocr_image(image, psm):
         return "OCR failed"
 
 
-def ocr_pdf(file_path, psm=1, cleanup_text=True, match_highlights=True):
+def ocr_pdf(clean_pdf_path, highlighted_pdf_path, psm=1, cleanup_text=True, match_highlights=True):
     try:
-        # Convert PDF to images
+        # Convert clean PDF to images
         if poppler_path:
-            images = convert_from_path(file_path, poppler_path=poppler_path)
+            clean_images = convert_from_path(clean_pdf_path, poppler_path=poppler_path)
+            highlighted_images = convert_from_path(highlighted_pdf_path, poppler_path=poppler_path)
         else:
-            images = convert_from_path(file_path)
+            clean_images = convert_from_path(clean_pdf_path)
+            highlighted_images = convert_from_path(highlighted_pdf_path)
 
-        # Perform OCR on the images
+        # Perform OCR on the clean images
         ocr_text = ""
-        for i, image in enumerate(images):
+        for i, image in enumerate(clean_images):
             page_num = i + 1
             ocr_text += f"\nPage: {page_num}\n"
             text = ocr_image(image, psm)
+            # TODO move this after the highlight matching
             if cleanup_text:
                 text = process_text(text)
 
             if match_highlights:
-                # TODO cleanup output folder thing
-                highlights = extract_highlights.extract_highlights(image, i, "../pdf/output")
+                # Extract highlights from the corresponding highlighted image
+                highlights = extract_highlights.extract_highlights(highlighted_images[i], i, "../pdf/output")
                 for highlight in highlights:
                     match_result = find_highlight_in_text(highlight["text"], text)
                     if match_result:
                         start_index, end_index, similarity = match_result
                         logger.info(f"Highlight found: '{text[start_index:end_index][:20]}' (Similarity: {similarity}%)")
                         if highlight["color"] == "yellow":
-                            css_start = "<span class=\"hlt-ylw\">"
+                            css_class = "\"hlt-ylw\""
                         elif highlight["color"] == "green":
-                            css_start = "<span class=\"hlt-grn\">"
+                            css_class = "\"hlt-grn\""
                         elif highlight["color"] == "red":
-                            css_start = "<span class=\"hlt-red\">"
+                            css_class = "\"hlt-red\""
                         elif highlight["color"] == "purple":
-                            css_start = "<span class=\"hlt-prp\">"
+                            css_class = "\"hlt-prp\""
                         else:
-                            css_start = "<span class=\"hlt-ylw\">"
+                            css_class = "\"hlt-ylw\""
                             logger.error(f"Error: Unrecognized color {highlight['color']}")
-                        highlighted_section = css_start + text[start_index:end_index] + "</span>"
+                        span = f"<span match=\"{similarity}%\" class={css_class}>"
+                        highlighted_section = span + text[start_index:end_index] + "</span>"
                         text = text[:start_index] + highlighted_section + text[end_index:]
                     else:
                         logger.error(f"Error: No match found for highlight on page {i+1}")
@@ -73,7 +77,7 @@ def ocr_pdf(file_path, psm=1, cleanup_text=True, match_highlights=True):
         return ocr_text
 
     except Exception as e:
-        logger.exception(f"Error processing {file_path}: {e}")
+        logger.exception(f"Error processing PDFs: {e}")
         return None
 
 
@@ -142,10 +146,11 @@ def find_highlight_in_text(highlight_text, full_text, threshold=0):
 
 if __name__ == "__main__":
     # This block is for testing the module independently
-    test_pdf = "../pdf/annotated.pdf"
+    clean_pdf = "../pdf/mixed_columns_clean.pdf"
+    highlighted_pdf = "../pdf/mixed_columns_highlighted.pdf"
 
     # For multi-column PDF
-    pdf_text = ocr_pdf(test_pdf)
+    pdf_text = ocr_pdf(clean_pdf, highlighted_pdf)
     # Write the full text to a markdown file
     output_file = os.path.join("../pdf/output", "ocr_result.md")
     with open(output_file, 'w', encoding='utf-8') as md_file:
