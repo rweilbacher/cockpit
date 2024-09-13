@@ -5,7 +5,7 @@ from PIL import Image
 import logging
 from typing import List, Dict
 import os
-from ocr_util import ocr_image_file
+from ocr_util import ocr_image
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -56,7 +56,8 @@ def extract_highlights(annotated_img: Image.Image, page_num: int, output_folder:
                             cv2.cvtColor(highlight, cv2.COLOR_RGB2BGR))
 
                 # Perform OCR on the highlight image
-                highlight_text = ocr_image_file(os.path.join(output_folder, highlight_filename))
+                highlight = Image.fromarray(cv2.cvtColor(highlight, cv2.COLOR_BGR2RGB))
+                highlight_text = ocr_image(highlight, 6, page_number=f"hlt_{page_num + 1}_{color}_{i + 1}")
 
                 highlighted_area = {
                     'color': color,
@@ -82,7 +83,7 @@ def extract_highlights(annotated_img: Image.Image, page_num: int, output_folder:
 
         logger.info(f"Extracted highlights from page {page_num + 1}")
     except Exception as e:
-        logger.error(f"Error extracting highlights from page {page_num + 1}: {str(e)}")
+        logger.exception(f"Error extracting highlights from page {page_num + 1}: {str(e)}")
     return highlighted_areas
 
 
