@@ -11,6 +11,7 @@ import numpy as np
 import subprocess
 import tempfile
 import sys
+import shutil
 
 
 # Set the path to the Poppler binaries if not in system PATH
@@ -57,9 +58,6 @@ def setup_logging(log_file_path):
                             logging.FileHandler(log_file_path)
                         ])
     return logging.getLogger(__name__)
-
-
-logger = setup_logging(LOG_FILE_PATH)
 
 
 def preprocess_image(image):
@@ -148,7 +146,7 @@ def preprocess_hlt(image):
     return image
 
 
-def ocr_image(image, psm, preprocess=False, hlt=False, print_osd=False, page_number=None, output_dir='../pdf/output'):
+def ocr_image(image, psm, output_path, logger, preprocess=False, hlt=False, print_osd=False, page_number=None):
     try:
         if preprocess and not hlt:
             image = preprocess_image(image)
@@ -169,9 +167,9 @@ def ocr_image(image, psm, preprocess=False, hlt=False, print_osd=False, page_num
         # Visualize layout analysis
         if page_number is not None:
             data = pytesseract.image_to_data(image, config=custom_config, output_type=pytesseract.Output.DICT)
-            visualize_layout(image, data, page_number, output_dir)
+            visualize_layout(image, data, page_number, output_path, logger)
             if not hlt:
-                analyze_page_accuracy(data, page_number, output_dir)
+                analyze_page_accuracy(data, page_number, output_path, logger)
 
         return text
     except pytesseract.TesseractError as e:
@@ -179,7 +177,7 @@ def ocr_image(image, psm, preprocess=False, hlt=False, print_osd=False, page_num
         return "OCR failed"
 
 
-def visualize_layout(image, data, page_number, output_dir):
+def visualize_layout(image, data, page_number, output_dir, logger):
     # Create a drawing object
     draw = ImageDraw.Draw(image)
 
@@ -234,7 +232,7 @@ def calculate_word_accuracy_percentages(data):
     return percentages, total_words
 
 
-def analyze_page_accuracy(data, page_number, output_dir):
+def analyze_page_accuracy(data, page_number, output_dir, logger):
     percentages, total_words = calculate_word_accuracy_percentages(data)
 
     # Create a single line log string
@@ -252,7 +250,7 @@ def analyze_page_accuracy(data, page_number, output_dir):
         f.write(log_string + '\n')
 
 
-def ocr_pdf(clean_pdf_path, highlighted_pdf_path, psm=1, cleanup_text=True, match_highlights=True):
+def ocr_pdf(clean_pdf_path, highlighted_pdf_path, output_path, logger, psm=1, cleanup_text=True, match_highlights=True):
     # Find the end of the current word
     def find_word_end(text, index):
         while index < len(text) and not text[index].isspace():
@@ -273,14 +271,14 @@ def ocr_pdf(clean_pdf_path, highlighted_pdf_path, psm=1, cleanup_text=True, matc
         for i, image in enumerate(clean_images):
             page_num = i + 1
             ocr_text += f"\nPage: {page_num}\n"
-            text = ocr_image(image, psm, preprocess=True, page_number=page_num)
+            text = ocr_image(image, psm, output_path, logger, preprocess=True, page_number=page_num)
             # TODO move this after the highlight matching (or test if that makes anything better)
             if cleanup_text:
                 text = process_text(text)
 
             if match_highlights:
                 # Extract highlights from the corresponding highlighted image
-                highlights = extract_highlights.extract_highlights(highlighted_images[i], i, "../pdf/output")
+                highlights = extract_highlights.extract_highlights(highlighted_images[i], i, output_path, logger)
                 for highlight in reversed(highlights):
                     match_result = find_highlight_in_text(highlight["text"], text)
                     if match_result:
@@ -403,38 +401,68 @@ def find_highlight_in_text(highlight_text, full_text, threshold=0):
     return best_match  # This will be None if no match is found
 
 
+def process_pdf_files(input_folder: str, output_base_folder: str):
+    # Get all PDF files in the input folder
+    pdf_files = [f for f in os.listdir(input_folder) if f.endswith('.pdf')]
+
+    # Group files by their base name
+    file_groups = {}
+    for pdf_file in pdf_files:
+        if pdf_file.endswith('_clean.pdf'):
+            base_name = pdf_file[:-10]  # Remove '_clean.pdf'
+            if base_name not in file_groups:
+                file_groups[base_name] = {'clean': None, 'hlted': None}
+            file_groups[base_name]['clean'] = pdf_file
+        elif pdf_file.endswith('_hlted.pdf'):
+            base_name = pdf_file[:-10]  # Remove '_hlted.pdf'
+            if base_name not in file_groups:
+                file_groups[base_name] = {'clean': None, 'hlted': None}
+            file_groups[base_name]['hlted'] = pdf_file
+
+    # Process each group of files
+    for base_name, files in file_groups.items():
+        if files['clean'] and files['hlted']:
+            clean_pdf = os.path.join(input_folder, files['clean'])
+            highlighted_pdf = os.path.join(input_folder, files['hlted'])
+
+            # Create output folder
+            output_folder = os.path.join(output_base_folder, base_name)
+            os.makedirs(output_folder, exist_ok=True)
+
+            # Setup logging
+            logger = setup_logging(os.path.join(output_folder, "ocr_util.log"))
+
+            # Run OCR
+            pdf_text = ocr_pdf(clean_pdf, highlighted_pdf, output_folder, logger)
+
+            # Write the full text to a markdown file
+            output_file = os.path.join(output_folder, "ocr_result.md")
+            with open(output_file, 'w', encoding='utf-8') as md_file:
+                md_file.write(pdf_text)
+
+            # Copy original PDFs to output folder
+            shutil.copy2(clean_pdf, output_folder)
+            shutil.copy2(highlighted_pdf, output_folder)
+
+            min_sim = 101
+            max_sim = -1
+            sum = 0
+            for similarity in similarities:
+                sum += similarity
+                if similarity < min_sim:
+                    min_sim = similarity
+                if similarity > max_sim:
+                    max_sim = similarity
+            avg_sim = sum / len(similarities)
+            logger.info(f"Similarity - min={min_sim} max={max_sim} avg={avg_sim}")
+
+            logger.info(f"Processed {base_name}")
+        else:
+            logger.warning(f"Incomplete set of files for {base_name}")
+
+
 if __name__ == "__main__":
-    # This block is for testing the module independently
-    # clean_pdf = "../pdf/13clean.pdf"
-    # highlighted_pdf = "../pdf/13anno.pdf"
+    input_folder = "../pdf/output"
+    output_base_folder = "../pdf/output"
 
-    # test_pdf = "../pdf/The gentle breeze whispered through the trees.pdf"
-    # ocr_pdf(test_pdf, test_pdf, match_highlights=False)
-
-    clean_pdf = "../pdf/clean.pdf"
-    highlighted_pdf = "../pdf/annotated.pdf"
-
-    # For multi-column PDF
-    pdf_text = ocr_pdf(clean_pdf, highlighted_pdf)
-    # Write the full text to a markdown file
-    output_file = os.path.join("../pdf/output", "ocr_result.md")
-    with open(output_file, 'w', encoding='utf-8') as md_file:
-        md_file.write(pdf_text)
-
-    if DEBUG:
-        min_sim = 101
-        max_sim = -1
-        sum = 0
-        for similarity in similarities:
-            sum += similarity
-            if similarity < min_sim:
-                min_sim = similarity
-            if similarity > max_sim:
-                max_sim = similarity
-        avg_sim = sum / len(similarities)
-        print(f"Similarity info - min={min_sim} max={max_sim} avg={avg_sim}")
-
-
-
-    print(f"\nFull OCR result written to: {output_file}")
-
+    process_pdf_files(input_folder, output_base_folder)

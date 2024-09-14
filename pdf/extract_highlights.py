@@ -7,9 +7,9 @@ from typing import List, Dict
 import os
 from ocr_util import ocr_image
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# # Set up logging
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# logger = logging.getLogger(__name__)
 
 # Minimum size for highlighted areas (in pixels)
 MIN_HIGHLIGHT_AREA = 3000  # Adjust this value as needed
@@ -27,7 +27,7 @@ DEBUG = True
 # TODO OCR outcomes would probably be better if boxes were restricted to one column
 
 
-def extract_highlights(annotated_img: Image.Image, page_num: int, output_folder: str) -> List[Dict]:
+def extract_highlights(annotated_img: Image.Image, page_num: int, output_folder: str, logger) -> List[Dict]:
     annotated_img = np.array(annotated_img)
     highlighted_areas = []
     try:
@@ -35,7 +35,7 @@ def extract_highlights(annotated_img: Image.Image, page_num: int, output_folder:
             # Save the whole annotated page
             cv2.imwrite(os.path.join(output_folder, f"page{page_num + 1}_annotated.png"),
                         cv2.cvtColor(annotated_img, cv2.COLOR_RGB2BGR))
-        img_with_boxes = annotated_img
+        img_with_boxes = annotated_img.copy()
 
         hsv = cv2.cvtColor(annotated_img, cv2.COLOR_RGB2HSV)
         for color, (lower, upper) in COLOR_RANGES_HSV.items():
@@ -58,7 +58,7 @@ def extract_highlights(annotated_img: Image.Image, page_num: int, output_folder:
 
                 # Perform OCR on the highlight image
                 highlight = Image.fromarray(highlight)
-                highlight_text = ocr_image(highlight, 6, preprocess=True, hlt=True, page_number=f"hlt_{page_num + 1}_{color}_{i + 1}")
+                highlight_text = ocr_image(highlight, 6, output_folder, logger, preprocess=True, hlt=True, page_number=f"hlt_{page_num + 1}_{color}_{i + 1}")
 
                 highlighted_area = {
                     'color': color,
@@ -96,7 +96,7 @@ def extract_highlights_multi_page(annotated_images: List[np.ndarray], output_fol
     return all_highlighted_areas
 
 
-def generate_markdown(highlighted_areas: List[Dict], output_folder: str, pdf_name: str):
+def generate_markdown(highlighted_areas: List[Dict], output_folder: str, pdf_name: str, logger):
     markdown_content = f"# Highlights from {pdf_name}\n\n"
     for area in highlighted_areas:
         markdown_content += f"## Page {area['page']} - {area['color'].capitalize()} Highlight\n\n"
