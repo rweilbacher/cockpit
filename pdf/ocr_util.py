@@ -10,10 +10,8 @@ import cv2
 import numpy as np
 import subprocess
 import tempfile
+import sys
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 # Set the path to the Poppler binaries if not in system PATH
 poppler_path = None  # Set this to the Poppler path if it's not in your system PATH
@@ -24,9 +22,53 @@ similarities = []
 DEBUG = True
 
 
+# Set the path to the log file
+LOG_FILE_PATH = '../pdf/output/ocr_util.log'
+
+
+# Set up logging
+def setup_logging(log_file_path):
+    class TeeStream(object):
+        def __init__(self, stream, file):
+            self.stream = stream
+            self.file = file
+
+        def write(self, data):
+            self.stream.write(data)
+            self.file.write(data)
+            self.flush()
+
+        def flush(self):
+            self.stream.flush()
+            self.file.flush()
+
+    log_dir = os.path.dirname(log_file_path)
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+    log_file = open(log_file_path, 'w')
+    sys.stdout = TeeStream(sys.stdout, log_file)
+    sys.stderr = TeeStream(sys.stderr, log_file)
+
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s - %(levelname)s - %(message)s',
+                        handlers=[
+                            logging.StreamHandler(sys.stdout),
+                            logging.FileHandler(log_file_path)
+                        ])
+    return logging.getLogger(__name__)
+
+
+logger = setup_logging(LOG_FILE_PATH)
+
+
 def preprocess_image(image):
     # Convert PIL Image to OpenCV format
     img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+
+    # Cut 190 off the top and 150 off the bottom
+    height, width = img.shape[:2]
+    img = img[190:height - 150, :]
 
     # Convert the image to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -41,7 +83,7 @@ def preprocess_image(image):
     contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     if not contours:
-        return image  # Return original image if no contours found
+        return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))  # Return cropped image if no contours found
 
     # Find the bounding box of the content
     x_min, y_min, x_max, y_max = float('inf'), float('inf'), 0, 0
@@ -75,7 +117,34 @@ def preprocess_image(image):
     return Image.fromarray(centered)
 
 
+def remove_hlt_color(image, color_ranges):
+    # Convert image to HSV
+    hsv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2HSV)
+    img_arr = np.array(image)
+
+    # Create a mask for all specified color ranges
+    mask = np.zeros(hsv_image.shape[:2], dtype=np.uint8)
+
+    for color, (lower, upper) in color_ranges.items():
+        color_mask = cv2.inRange(hsv_image, lower, upper)
+        mask = cv2.bitwise_or(mask, color_mask)
+
+    # Invert the mask
+    inv_mask = cv2.bitwise_not(mask)
+
+    # Create a white image of the same size as the input image
+    white = np.ones(img_arr.shape, dtype=np.uint8) * 255
+
+    # Use the inverted mask to combine the original image and the white image
+    result = cv2.bitwise_and(img_arr, img_arr, mask=inv_mask)
+    result += cv2.bitwise_and(white, white, mask=mask)
+
+    return Image.fromarray(result)
+
+
 def preprocess_hlt(image):
+    image = remove_hlt_color(image, extract_highlights.COLOR_RANGES_HSV)
+    # image = preprocess_image(image)
     return image
 
 
@@ -101,6 +170,8 @@ def ocr_image(image, psm, preprocess=False, hlt=False, print_osd=False, page_num
         if page_number is not None:
             data = pytesseract.image_to_data(image, config=custom_config, output_type=pytesseract.Output.DICT)
             visualize_layout(image, data, page_number, output_dir)
+            if not hlt:
+                analyze_page_accuracy(data, page_number, output_dir)
 
         return text
     except pytesseract.TesseractError as e:
@@ -125,7 +196,69 @@ def visualize_layout(image, data, page_number, output_dir):
     logger.info(f"Saved annotated image to {output_path}")
 
 
+def calculate_word_accuracy_percentages(data):
+    # Define the new confidence buckets
+    buckets = {
+        '0-40%': 0,
+        '40-60%': 0,
+        '60-80%': 0,
+        '80-90%': 0,
+        '90-100%': 0
+    }
+
+    total_words = 0
+
+    # Iterate through the words in the data
+    for i in range(len(data['text'])):
+        if data['text'][i].strip():  # Only consider non-empty words
+            confidence = float(data['conf'][i])
+            total_words += 1
+
+            if confidence < 40:
+                buckets['0-40%'] += 1
+            elif confidence < 60:
+                buckets['40-60%'] += 1
+            elif confidence < 80:
+                buckets['60-80%'] += 1
+            elif confidence < 90:
+                buckets['80-90%'] += 1
+            else:
+                buckets['90-100%'] += 1
+
+    # Calculate percentages
+    percentages = {}
+    for bucket, count in buckets.items():
+        percentage = (count / total_words) * 100 if total_words > 0 else 0
+        percentages[bucket] = round(percentage, 2)
+
+    return percentages, total_words
+
+
+def analyze_page_accuracy(data, page_number, output_dir):
+    percentages, total_words = calculate_word_accuracy_percentages(data)
+
+    # Create a single line log string
+    log_parts = [f"Page {page_number}"]
+    log_parts.extend([f"{bucket}: {percentage}%" for bucket, percentage in percentages.items()])
+    log_parts.append(f"Total words: {total_words}")
+    log_string = " | ".join(log_parts)
+
+    # Log the results in a single line
+    logger.info(log_string)
+
+    # Optionally, save to a file
+    output_file = os.path.join(output_dir, f'word_accuracy_page_{page_number}.txt')
+    with open(output_file, 'w') as f:
+        f.write(log_string + '\n')
+
+
 def ocr_pdf(clean_pdf_path, highlighted_pdf_path, psm=1, cleanup_text=True, match_highlights=True):
+    # Find the end of the current word
+    def find_word_end(text, index):
+        while index < len(text) and not text[index].isspace():
+            index += 1
+        return index
+
     try:
         # Convert clean PDF to images
         if poppler_path:
@@ -141,14 +274,14 @@ def ocr_pdf(clean_pdf_path, highlighted_pdf_path, psm=1, cleanup_text=True, matc
             page_num = i + 1
             ocr_text += f"\nPage: {page_num}\n"
             text = ocr_image(image, psm, preprocess=True, page_number=page_num)
-            # TODO move this after the highlight matching
+            # TODO move this after the highlight matching (or test if that makes anything better)
             if cleanup_text:
                 text = process_text(text)
 
             if match_highlights:
                 # Extract highlights from the corresponding highlighted image
                 highlights = extract_highlights.extract_highlights(highlighted_images[i], i, "../pdf/output")
-                for highlight in highlights:
+                for highlight in reversed(highlights):
                     match_result = find_highlight_in_text(highlight["text"], text)
                     if match_result:
                         start_index, end_index, similarity = match_result
@@ -166,11 +299,38 @@ def ocr_pdf(clean_pdf_path, highlighted_pdf_path, psm=1, cleanup_text=True, matc
                         else:
                             css_class = "\"hlt-ylw\""
                             logger.error(f"Error: Unrecognized color {highlight['color']}")
+
+                        # Check if the highlight ends in the middle of a word
+                        if end_index < len(text) and not text[end_index].isspace():
+                            # If so, extend the end_index to the end of the word
+                            end_index = find_word_end(text, end_index)
+
+                        # Ensure we don't go beyond the text length
+                        end_index = min(end_index, len(text))
+
+                        # First, look for the start of a span tag
+                        span_start = text.rfind("<span", start_index, end_index)
+                        if span_start != -1:
+                            # If found, move end_index to just before the span starts
+                            end_index = span_start
+                            # Adjust start_index if necessary
+                            start_index = min(start_index, span_start)
+
+                        # Now look for the end of a span tag
+                        span_end = text.find("</span>", start_index, end_index)
+                        if span_end != -1:
+                            shift = (span_end + 7) - start_index
+                            new_start_index = span_end + 7
+                            new_end_index = min(end_index + shift, len(text))
+                            start_index = new_start_index
+                            end_index = new_end_index
+
                         span = f"<span match=\"{similarity}%\" class={css_class}>"
                         highlighted_section = span + text[start_index:end_index] + "</span>"
                         text = text[:start_index] + highlighted_section + text[end_index:]
                     else:
                         logger.error(f"Error: No match found for highlight on page {i+1}")
+                        similarities.append(0)
             ocr_text += text
 
         return ocr_text
@@ -207,7 +367,7 @@ def process_text(text):
     text = re.sub(r'\n{2,}', '\n\n', text)
 
     # Reformat words that were split across lines
-    text = re.sub(r'(\w+)-\s\n(\w+)', r'\1\2', text)
+    text = re.sub(r'(\w+)-\s(\w+)', r'\1\2', text)
 
     return text.strip()
 
@@ -245,8 +405,8 @@ def find_highlight_in_text(highlight_text, full_text, threshold=0):
 
 if __name__ == "__main__":
     # This block is for testing the module independently
-    # clean_pdf = "../pdf/mixed_columns_clean.pdf"
-    # highlighted_pdf = "../pdf/mixed_columns_highlighted.pdf"
+    # clean_pdf = "../pdf/13clean.pdf"
+    # highlighted_pdf = "../pdf/13anno.pdf"
 
     # test_pdf = "../pdf/The gentle breeze whispered through the trees.pdf"
     # ocr_pdf(test_pdf, test_pdf, match_highlights=False)

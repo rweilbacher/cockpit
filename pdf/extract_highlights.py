@@ -15,10 +15,10 @@ logger = logging.getLogger(__name__)
 MIN_HIGHLIGHT_AREA = 3000  # Adjust this value as needed
 
 # Define color ranges in HSV
-COLOR_RANGES = {
+COLOR_RANGES_HSV = {
     'yellow': (np.array([28, 80, 200]), np.array([32, 255, 255])),
-    'green': (np.array([64, 95, 200]), np.array([68, 255, 255])),
-    'red': (np.array([0, 95, 200]), np.array([6, 255, 255])),
+    'green': (np.array([39, 95, 200]), np.array([43, 255, 255])),
+    'red': (np.array([0, 50, 200]), np.array([6, 255, 255])),
     'purple': (np.array([150, 80, 200]), np.array([159, 255, 255]))
 }
 
@@ -35,9 +35,10 @@ def extract_highlights(annotated_img: Image.Image, page_num: int, output_folder:
             # Save the whole annotated page
             cv2.imwrite(os.path.join(output_folder, f"page{page_num + 1}_annotated.png"),
                         cv2.cvtColor(annotated_img, cv2.COLOR_RGB2BGR))
+        img_with_boxes = annotated_img
 
         hsv = cv2.cvtColor(annotated_img, cv2.COLOR_RGB2HSV)
-        for color, (lower, upper) in COLOR_RANGES.items():
+        for color, (lower, upper) in COLOR_RANGES_HSV.items():
             mask = cv2.inRange(hsv, lower, upper)
             contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             for i, contour in enumerate(contours):
@@ -56,8 +57,8 @@ def extract_highlights(annotated_img: Image.Image, page_num: int, output_folder:
                             cv2.cvtColor(highlight, cv2.COLOR_RGB2BGR))
 
                 # Perform OCR on the highlight image
-                highlight = Image.fromarray(cv2.cvtColor(highlight, cv2.COLOR_BGR2RGB))
-                highlight_text = ocr_image(highlight, 6, page_number=f"hlt_{page_num + 1}_{color}_{i + 1}")
+                highlight = Image.fromarray(highlight)
+                highlight_text = ocr_image(highlight, 6, preprocess=True, hlt=True, page_number=f"hlt_{page_num + 1}_{color}_{i + 1}")
 
                 highlighted_area = {
                     'color': color,
@@ -72,14 +73,14 @@ def extract_highlights(annotated_img: Image.Image, page_num: int, output_folder:
 
                 if DEBUG:
                     # Draw bounding box on the full image for visualization
-                    cv2.rectangle(annotated_img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    cv2.rectangle(img_with_boxes, (x, y), (x + w, y + h), (0, 255, 0), 2)
                     with open(os.path.join(output_folder, f"highlight_page{page_num + 1}_{color}_{i + 1}.md"), "w") as file:
                         file.write(highlighted_area["text"])
 
         if DEBUG and len(highlighted_areas) > 0:
             # Save the image with bounding boxes
             cv2.imwrite(os.path.join(output_folder, f"page{page_num + 1}_with_boxes.png"),
-                        cv2.cvtColor(annotated_img, cv2.COLOR_RGB2BGR))
+                        cv2.cvtColor(img_with_boxes, cv2.COLOR_RGB2BGR))
 
         logger.info(f"Extracted highlights from page {page_num + 1}")
     except Exception as e:
